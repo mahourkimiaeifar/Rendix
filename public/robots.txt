@@ -1,2 +1,18 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /api
+Disallow: /.env
+Disallow: /vendor
+Disallow: /storage
+
+Sitemap: https://rendix.ir/sitemap.xml
+
+# Block AI training crawlers
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /

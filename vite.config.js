@@ -5,9 +5,20 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.jsx'],
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.jsx',
+            ],
             refresh: true,
         }),
         react(),
     ],
+    optimizeDeps: {
+        include: [
+            'react',
+            'react-dom/client',
+            'three',
+            '@react-three/fiber',
+        ],
+    },
 });

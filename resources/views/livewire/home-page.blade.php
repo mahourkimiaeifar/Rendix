@@ -1,161 +1,530 @@
 <?php
-use Livewire\Volt\Component;
 
-new class extends Component {
+use Livewire\Volt\Component;
+use Livewire\Attributes\Layout;
+use App\Support\Schema;
+
+new #[Layout('components.layouts.app')]
+    class extends Component {
+    public $faqs = [];
+
+    public function mount(): void
+    {
+        $this->faqs = Schema::faqForBlade();
+    }
+
     public function rendering($view)
     {
         $view->layoutData([
-            'title' => 'رندیکس | طراحی وبسایت و دیجیتال مارکتینگ در نجف آباد',
-            'metaDescription' => 'آژانس مهندسی رندیکس؛ پیشرو در طراحی وبسایت اختصاصی، سئو تضمینی و دیجیتال مارکتینگ در نجف آباد. افزایش فروش کسب‌وکار شما با تکنولوژی روز.',
-            'metaKeywords' => 'طراحی وبسایت, دیجیتال مارکتینگ, نجف آباد, طراحی سایت نجف آباد, سئو سایت در نجف آباد, رندیکس'
+            'title' => 'رندیکس | دیجیتال مارکتینگ در نجف آباد، طراحی وبسایت و سئو',
+            'metaDescription' => 'رندیکس برای کسب‌وکارهای نجف آباد دیجیتال مارکتینگ، طراحی وبسایت اختصاصی، سئو، تبلیغات آنلاین، مدیریت شبکه‌های اجتماعی و فروشگاه اینترنتی را با هدف افزایش دیده‌شدن، اعتماد و فروش ارائه می‌دهد.',
+            'keywords' => 'دیجیتال مارکتینگ نجف آباد, طراحی وبسایت نجف آباد, سئو در نجف آباد, تبلیغات آنلاین نجف آباد, مدیریت شبکه‌های اجتماعی نجف آباد, فروشگاه اینترنتی نجف آباد, آژانس دیجیتال مارکتینگ نجف آباد, بازاریابی اینترنتی نجف آباد, رشد فروش آنلاین نجف آباد, طراحی سایت اصفهان, بهینه‌سازی نرخ تبدیل, مشاوره دیجیتال مارکتینگ',
+            'ogImage' => '/images/og-home.jpg',
+            'schema' => [Schema::home()],
         ]);
     }
 }; ?>
 
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
-    
-    <!-- ۱. بخش Hero با تمرکز، کنتراست بالا و سلسله‌مراتب بصری دقیق -->
-    <section class="min-h-[75vh] flex flex-col items-center justify-center text-center">
-        
-        <div class="gsap-reveal inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/5 dark:bg-white/5 border border-slate-300/80 dark:border-slate-800 backdrop-blur-md mb-8">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-            <span class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
-                مهندسی وب و رشد کسب‌وکار در <strong class="text-cyan-600 dark:text-cyan-400">نجف آباد</strong> و سراسر ایران
-            </span>
+@php
+    $keywords = [
+        'دیجیتال مارکتینگ نجف آباد',
+        'طراحی وبسایت اختصاصی',
+        'سئو و رشد در گوگل',
+        'تبلیغات آنلاین',
+        'مدیریت شبکه‌های اجتماعی',
+        'فروشگاه اینترنتی',
+        'بهینه‌سازی نرخ تبدیل',
+        'پشتیبانی مستمر',
+    ];
+
+    $services = [
+        [
+            'id' => 'digital-marketing',
+            'icon' => 'fa-solid fa-bullhorn',
+            'title' => 'دیجیتال مارکتینگ در نجف آباد',
+            'text' => 'استراتژی رشد آنلاین، تبلیغات هدفمند، تولید محتوا و بهینه‌سازی قیف فروش برای کسب‌وکارهای محلی و ملی.',
+            'metric' => 'رشد فروش',
+            'metricNote' => 'از بازدید تا مشتری',
+            'span' => 'md:col-span-7',
+        ],
+        [
+            'id' => 'web-design',
+            'icon' => 'fa-solid fa-code',
+            'title' => 'طراحی وبسایت اختصاصی',
+            'text' => 'وبسایت سریع، امن، سئوپدیده و متناسب با هویت برند؛ بدون قالب آماده و کد کثیف.',
+            'metric' => '< 2s',
+            'metricNote' => 'سرعت لود هدف',
+            'span' => 'md:col-span-5',
+        ],
+        [
+            'id' => 'seo',
+            'icon' => 'fa-solid fa-magnifying-glass-chart',
+            'title' => 'سئو و دیده‌شدن در گوگل',
+            'text' => 'سئوی تکنیکال، محتوایی و محلی برای جذب مشتریانی که در نجف آباد و اصفهان جست‌وجو می‌کنند.',
+            'metric' => '90+',
+            'metricNote' => 'امتیاز فنی هدف',
+            'span' => 'md:col-span-4',
+        ],
+        [
+            'id' => 'social-media',
+            'icon' => 'fa-solid fa-share-nodes',
+            'title' => 'شبکه‌های اجتماعی و تبلیغات',
+            'text' => 'مدیریت محتوا، کمپین‌های هدفمند و گزارش‌دهی عملکرد برای افزایش تعامل و لید واقعی.',
+            'metric' => 'کمپین',
+            'metricNote' => 'هدفمند و قابل اندازه‌گیری',
+            'span' => 'md:col-span-4',
+        ],
+        [
+            'id' => 'ecommerce',
+            'icon' => 'fa-solid fa-bag-shopping',
+            'title' => 'فروشگاه اینترنتی و CRO',
+            'text' => 'ساخت فروشگاه آنلاین با تجربه خرید روان، پرداخت امن و بهینه‌سازی نرخ تبدیل.',
+            'metric' => 'CRO',
+            'metricNote' => 'بهبود مسیر خرید',
+            'span' => 'md:col-span-4',
+        ],
+    ];
+
+    $processSteps = [
+        [
+            'number' => '۰۱',
+            'icon' => 'fa-solid fa-comments',
+            'title' => 'گفتگوی کشف',
+            'text' => 'اول می‌شنویم. هدف، مخاطب، رقبا و نقاط درد کسب‌وکار تو رو دقیق بررسی می‌کنیم.',
+        ],
+        [
+            'number' => '۰۲',
+            'icon' => 'fa-solid fa-map-location-dot',
+            'title' => 'استراتژی و نقشه راه',
+            'text' => 'بر اساس داده و تجربه، مسیر طراحی، سئو و مارکتینگ رو مشخص می‌کنیم.',
+        ],
+        [
+            'number' => '۰۳',
+            'icon' => 'fa-solid fa-code',
+            'title' => 'طراحی و توسعه',
+            'text' => 'رابط کاربری مدرن، کد تمیز، سرعت بالا و انیمیشن‌های معنادار ساخته می‌شه.',
+        ],
+        [
+            'number' => '۰۴',
+            'icon' => 'fa-solid fa-rocket',
+            'title' => 'راه‌اندازی و رشد',
+            'text' => 'سایت منتشر می‌شه، اما کار تمام نمی‌شه؛ بهینه‌سازی مستمر و پشتیبانی ادامه داره.',
+        ],
+    ];
+
+    $whyItems = [
+        [
+            'icon' => 'fa-solid fa-eye',
+            'title' => 'شفافیت کامل',
+            'text' => 'بدون قول‌های الکی، بدون پنهان‌کاری. هزینه، زمان و مراحل کار رو شفاف می‌گیم.',
+        ],
+        [
+            'icon' => 'fa-solid fa-gears',
+            'title' => 'وسواس فنی',
+            'text' => 'سرعت، امنیت، سئو و دسترسی‌پذیری برای ما اختیاری نیستن؛ بخشی از استانداردها.',
+        ],
+        [
+            'icon' => 'fa-solid fa-heart',
+            'title' => 'همراهی واقعی',
+            'text' => 'ما مثل یک تیم داخلی کنار کسب‌وکار تو می‌مونیم، نه یک فروشنده‌ی پروژه.',
+        ],
+    ];
+@endphp
+
+<div class="relative">
+
+    <section
+        id="hero"
+        class="rx-section rx-hero flex items-center section-tone-light"
+        data-rx-scene
+        data-scene-id="hero"
+        data-scene-color="#45C8FF"
+        data-scene-intensity="1.05"
+        data-scene-speed="1"
+    >
+        <div class="rx-container relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+                <div class="lg:col-span-7">
+                    <span class="rx-badge rx-reveal">
+                        <i class="fa-solid fa-location-crosshairs"></i>
+                        نجف‌آباد · اصفهان · ایران
+                    </span>
+
+                    <h1 class="rx-display mt-6 rx-reveal">
+                        سیستم
+                        <span class="rx-gradient-text">رشد دیجیتال</span><br>
+                        برای کسب‌وکارهای جدی
+                    </h1>
+
+                    <p class="rx-body-lg rx-muted mt-7 max-w-2xl rx-reveal">
+                        دیجیتال مارکتینگ در نجف‌آباد یعنی ترکیب وبسایت سریع، سئوی درست، تبلیغات هوشمند و محتوای هدفمند؛
+                        نه شلیک تصادفی به بازار. رندیکس مسیر دیده‌شدن، اعتماد و فروش را مهندسی می‌کند.
+                    </p>
+
+                    <div class="flex flex-wrap items-center gap-3 mt-9 rx-reveal">
+                        <a href="/contact" wire:navigate class="rx-btn rx-btn-primary">
+                            <span>مشاوره رایگان بگیر</span>
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </a>
+
+                        <a href="#services" class="rx-btn rx-btn-outline">
+                            <span>خدمات رندیکس</span>
+                            <i class="fa-solid fa-arrow-down"></i>
+                        </a>
+                    </div>
+
+                    <div class="rx-stack mt-8 rx-reveal">
+                        @foreach ($keywords as $keyword)
+                            <span class="rx-chip">
+                                <i class="fa-solid fa-asterisk"></i>
+                                {{ $keyword }}
+                            </span>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5 rx-reveal">
+                    <div class="rx-panel p-6 md:p-7">
+                        <div class="flex items-center justify-between gap-4 mb-6">
+                            <span class="rx-eyebrow">LIVE SIGNAL</span>
+                            <span class="rx-chip">
+                                <i class="fa-solid fa-wave-square"></i>
+                                growth mode
+                            </span>
+                        </div>
+
+                        <div class="rx-pulse" aria-hidden="true">
+                            <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mt-6">
+                            <div class="rx-mini-stat">
+                                <p class="rx-caption rx-soft">تمرکز بازار</p>
+                                <p class="rx-h3 mt-1 rx-text-light">نجف‌آباد</p>
+                            </div>
+
+                            <div class="rx-mini-stat">
+                                <p class="rx-caption rx-soft">پوشش خدمات</p>
+                                <p class="rx-h3 mt-1 rx-text-primary">سراسر ایران</p>
+                            </div>
+
+                            <div class="rx-mini-stat">
+                                <p class="rx-caption rx-soft">معماری فنی</p>
+                                <p class="rx-h3 mt-1 rx-text-purple">Laravel + React</p>
+                            </div>
+
+                            <div class="rx-mini-stat">
+                                <p class="rx-caption rx-soft">هدف نهایی</p>
+                                <p class="rx-h3 mt-1 rx-text-light">فروش واقعی</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-6 border-t" style="border-color: var(--rx-border);">
+                            <p class="rx-body rx-muted">
+                                یک وبسایت خوب، فقط ویترین نیست.  
+                                <span class="rx-text-light font-bold">موتور رشد</span> کسب‌وکار توئه.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <h1 class="gsap-reveal text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.2] max-w-4xl mb-6">
-            معماری نسل جدید <br />
-            <span class="bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 bg-clip-text text-transparent">
-                طراحی وبسایت و دیجیتال مارکتینگ
-            </span>
-        </h1>
-
-        <p class="gsap-reveal text-slate-600 dark:text-slate-300 max-w-2xl text-base sm:text-lg lg:text-xl leading-relaxed font-medium mb-10">
-            ما در <strong class="text-slate-900 dark:text-white font-black">رندیکس</strong> فقط کد نمی‌زنیم؛ ما با ترکیب سرعت خیره‌کننده، روانشناسی فروش و سئوی محلی قدرتمند در <strong class="text-slate-900 dark:text-white font-black">نجف آباد</strong>، بازدیدکنندگان شما را به مشتریان وفادار تبدیل می‌کنیم.
-        </p>
-
-        <div class="gsap-reveal flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
-            <a href="/contact" wire:navigate class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-slate-900 dark:bg-cyan-500 text-white dark:text-slate-950 font-black text-base shadow-xl shadow-cyan-500/15 hover:-translate-y-0.5 transition">
-                دریافت استراتژی رایگان دیجیتال مارکتینگ ←
-            </a>
-            <a href="/about" wire:navigate class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-300 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-bold text-base hover:border-cyan-500/50 transition backdrop-blur-md">
-                آشنایی با تیم نجف آباد
-            </a>
-        </div>
-
-        <!-- نوار آمار اعتمادساز -->
-        <div class="gsap-reveal grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-8 w-full max-w-4xl mt-16 p-6 rounded-3xl bg-white/85 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800/90 backdrop-blur-xl shadow-lg">
-            <div>
-                <div class="text-2xl sm:text-3xl font-black text-cyan-600 dark:text-cyan-400">+۹۹٪</div>
-                <div class="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 mt-1">پرفورمنس و سرعت</div>
-            </div>
-            <div>
-                <div class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">رتبه ۱</div>
-                <div class="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 mt-1">سئو محلی نجف آباد</div>
-            </div>
-            <div>
-                <div class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">۳ برابر</div>
-                <div class="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 mt-1">رشد نرخ تبدیل (CRO)</div>
-            </div>
-            <div>
-                <div class="text-2xl sm:text-3xl font-black text-emerald-500">۲۴/۷</div>
-                <div class="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 mt-1">پشتیبانی اختصاصی</div>
+        <div class="rx-hero-scroll rx-reveal" aria-hidden="true">
+            <div class="rx-hero-scroll-line">
+                <div class="rx-hero-scroll-dot"></div>
             </div>
         </div>
     </section>
 
-    <!-- ۲. بخش Bento Grid خدمات تخصصی (کنتراست و خوانایی فوق‌العاده) -->
-    <section class="py-16">
-        <div class="text-center max-w-2xl mx-auto mb-12">
-            <h2 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white mb-4">
-                اکوسیستم خدمات تخصصی رندیکس
-            </h2>
-            <p class="text-slate-600 dark:text-slate-400 text-sm sm:text-base">
-                همه‌چیز برای صدرنشینی برند شما در نتایج گوگل و بازار نجف آباد، در یک پکیج مهندسی‌شده.
-            </p>
-        </div>
+    <section class="rx-proof-band py-8">
+        <div class="rx-container">
+            <dl class="rx-stats">
+                <div class="rx-reveal">
+                    <dt class="rx-caption rx-soft mb-2">پروژه موفق</dt>
+                    <dd class="rx-h2">
+                        <span class="rx-text-light" data-count="50" data-suffix="+">۰</span>
+                    </dd>
+                </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- کارت بزرگ ۱: طراحی وبسایت -->
-            <article class="md:col-span-2 p-8 rounded-3xl bg-white/90 dark:bg-slate-900/85 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl shadow-xl hover:border-cyan-500/50 transition flex flex-col justify-between">
-                <div>
-                    <span class="inline-block px-3 py-1 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-xs font-black mb-4">
-                        WEB ENGINEERING
-                    </span>
-                    <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-3">
-                        طراحی وبسایت اختصاصی و فوق‌سریع
-                    </h3>
-                    <p class="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
-                        بدون قالب‌های آماده و کند! ما وبسایت‌های شرکتی، فروشگاهی و صنعتی را با معماری مدرن Laravel و React بدون کوچک‌ترین رفرش صفحه (SPA) طراحی می‌کنیم تا کاربر حس پرواز و کنترل کامل داشته باشد.
-                    </p>
+                <div class="rx-reveal">
+                    <dt class="rx-caption rx-soft mb-2">رضایت مشتری</dt>
+                    <dd class="rx-h2">
+                        <span class="rx-text-primary" data-count="98" data-suffix="٪">۰</span>
+                    </dd>
                 </div>
-                <div class="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                    <span class="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">رابط کاربری اختصاصی UI/UX</span>
-                    <span class="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">امنیت بانکی</span>
-                    <span class="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">ریسپانسیو دقیق موبایل</span>
-                </div>
-            </article>
 
-            <!-- کارت ۲: دیجیتال مارکتینگ -->
-            <article class="p-8 rounded-3xl bg-white/90 dark:bg-slate-900/85 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl shadow-xl hover:border-indigo-500/50 transition flex flex-col justify-between">
-                <div>
-                    <span class="inline-block px-3 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-black mb-4">
-                        GROWTH & SEO
-                    </span>
-                    <h3 class="text-xl font-black text-slate-900 dark:text-white mb-3">
-                        دیجیتال مارکتینگ داده‌محور
-                    </h3>
-                    <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-                        تدوین قیف فروش، کمپین‌های تبلیغاتی هدفمند و بهینه‌سازی نرخ تبدیل برای به حداکثر رساندن بازگشت سرمایه (ROI).
-                    </p>
+                <div class="rx-reveal">
+                    <dt class="rx-caption rx-soft mb-2">میانگین لود</dt>
+                    <dd class="rx-h2">
+                        <span class="rx-text-purple" data-count="2.3" data-decimals="1" data-suffix="s">۰</span>
+                    </dd>
                 </div>
-                <a href="/contact" wire:navigate class="mt-6 text-sm font-black text-indigo-600 dark:text-indigo-400 hover:underline">
-                    شروع کمپین فروش ←
-                </a>
-            </article>
 
-            <!-- کارت ۳: سئو محلی نجف آباد -->
-            <article class="md:col-span-3 p-8 rounded-3xl bg-gradient-to-l from-slate-900 to-slate-800 dark:from-slate-900 dark:to-slate-950 border border-slate-800 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
-                <div class="max-w-2xl">
-                    <span class="inline-block px-3 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 text-xs font-black mb-3">
-                        ویژه کسب‌وکارهای نجف آباد و اصفهان
-                    </span>
-                    <h3 class="text-2xl font-black mb-2">
-                        سلطه کامل بر نتایج جستجوی گوگل در نجف آباد
-                    </h3>
-                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
-                        وقتی مشتریان در نجف آباد یا سراسر ایران خدمات شما را در گوگل جستجو می‌کنند، نام برند شما باید اولین انتخابی باشد که می‌بینند.
-                    </p>
+                <div class="rx-reveal">
+                    <dt class="rx-caption rx-soft mb-2">پشتیبانی</dt>
+                    <dd class="rx-h2 rx-text-light">۲۴/۷</dd>
                 </div>
-                <a href="/contact" wire:navigate class="shrink-0 px-6 py-3.5 rounded-xl bg-cyan-500 text-slate-950 font-black text-sm hover:bg-cyan-400 transition">
-                    رزرو جلسه حضوری یا آنلاین
-                </a>
-            </article>
+            </dl>
         </div>
     </section>
 
-    <!-- ۳. بخش سوالات متداول برای تقویت شدید سئو (SEO FAQ) -->
-    <section class="py-12 max-w-4xl mx-auto">
-        <h2 class="text-2xl sm:text-3xl font-black text-center text-slate-900 dark:text-white mb-8">
-            سوالات متداول طراحی وبسایت و دیجیتال مارکتینگ
-        </h2>
-        <div class="space-y-4">
-            <div class="p-6 rounded-2xl bg-white/90 dark:bg-slate-900/85 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl">
-                <h3 class="font-black text-base sm:text-lg text-slate-900 dark:text-white mb-2">
-                    چرا طراحی وبسایت اختصاصی رندیکس از سایت‌های وردپرسی برتر است؟
-                </h3>
-                <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-                    سایت‌های اختصاصی رندیکس با هسته لاراول و ری‌اکت کدنویسی می‌شوند؛ این یعنی امنیت غیرقابل نفوذ، لود شدن زیر ۱ ثانیه، عدم وابستگی به افزونه‌های سنگین و کسب بالاترین امتیاز سئو از الگوریتم‌های گوگل.
+    <section
+        id="services"
+        class="rx-section section-tone-primary"
+        data-rx-scene
+        data-scene-id="services"
+        data-scene-color="#1769FF"
+        data-scene-intensity="1.08"
+        data-scene-speed="1.05"
+    >
+        <div class="rx-container relative z-10">
+            <div class="max-w-3xl mx-auto text-center mb-16">
+                <span class="rx-eyebrow rx-reveal">// SERVICES</span>
+
+                <h2 class="rx-h1 mt-4 rx-reveal">
+                    خدمات
+                    <span class="rx-gradient-text">دیجیتال مارکتینگ و طراحی وب</span>
+                    برای رشد کسب‌وکار
+                </h2>
+
+                <p class="rx-body-lg rx-muted mt-5 rx-reveal">
+                    ما هر خدمت را جدا نمی‌فروشیم. هدف ما ساخت یک سیستم رشد است:  
+                    مشتری درست، در زمان درست، با پیام درست، به سمت فروش هدایت شود.
                 </p>
             </div>
-            <div class="p-6 rounded-2xl bg-white/90 dark:bg-slate-900/85 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl">
-                <h3 class="font-black text-base sm:text-lg text-slate-900 dark:text-white mb-2">
-                    آیا امکان جلسه حضوری برای طراحی سایت و دیجیتال مارکتینگ در نجف آباد وجود دارد؟
-                </h3>
-                <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-                    بله! تیم رندیکس مستقر در نجف آباد است و برای تمام کسب‌وکارهای صنعتی، فروشگاهی و خدماتی نجف آباد و استان اصفهان امکان برگزاری جلسات مشاوره حضوری، عقد قرارداد رسمی و پشتیبانی مستقیم را فراهم کرده است.
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-5">
+                @foreach ($services as $service)
+                    <article id="{{ $service['id'] }}" class="rx-panel rx-bento-item {{ $service['span'] }} p-7 md:p-8 rx-reveal">
+                        <div class="rx-card-content">
+                            <div class="rx-icon-tile mb-5" style="width:3rem;height:3rem;border-radius:1rem;display:inline-flex;align-items:center;justify-content:center;color:var(--rx-section-accent);background:var(--rx-surface);border:1px solid var(--rx-border);font-size:1.15rem;">
+                                <i class="{{ $service['icon'] }}"></i>
+                            </div>
+
+                            <h3 class="rx-h3">{{ $service['title'] }}</h3>
+
+                            <p class="rx-body rx-muted mt-4">{{ $service['text'] }}</p>
+
+                            <div class="mt-6 pt-5 border-t" style="border-color: var(--rx-border);">
+                                <span class="rx-caption rx-soft">{{ $service['metricNote'] }}</span>
+                                <p class="rx-h3 mt-1 rx-text-primary">{{ $service['metric'] }}</p>
+                            </div>
+                        </div>
+                    </article>
+                @endforeach
+
+                <article id="support" class="rx-panel md:col-span-12 p-7 md:p-8 rx-reveal">
+                    <div class="rx-card-content grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
+                        <div class="lg:col-span-8">
+                            <h3 class="rx-h2">پشتیبانی یعنی تنها نذاشتن</h3>
+
+                            <p class="rx-body rx-muted mt-4 max-w-3xl">
+                                بعد از تحویل پروژه، رابطه ما تموم نمی‌شه.  
+                                مانیتورینگ، به‌روزرسانی، امنیت، بهینه‌سازی سرعت و راهنمایی محتوایی بخشی از تعهد رندیکسه.
+                            </p>
+                        </div>
+
+                        <div class="lg:col-span-4 flex lg:justify-end">
+                            <a href="/contact" wire:navigate class="rx-btn rx-btn-outline w-full lg:w-auto">
+                                <span>گفتگو با تیم رندیکس</span>
+                                <i class="fa-solid fa-arrow-left"></i>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section
+        id="process"
+        class="rx-section rx-section-alt section-tone-purple"
+        data-rx-scene
+        data-scene-id="process"
+        data-scene-color="#7653F6"
+        data-scene-intensity="1.12"
+        data-scene-speed="0.95"
+    >
+        <div class="rx-container rx-method relative z-10">
+            <aside class="rx-method-aside">
+                <span class="rx-eyebrow rx-reveal">// PROCESS</span>
+
+                <h2 class="rx-h1 mt-4 rx-reveal">
+                    سفر تو با رندیکس
+                    <span class="rx-gradient-text">چطور شروع می‌شه؟</span>
+                </h2>
+
+                <p class="rx-body-lg rx-muted mt-5 rx-reveal">
+                    ما فرایند رو ساده، شفاف و بدون استرس کردیم.  
+                    تو فقط ایده و هدف رو بگو؛ بقیه‌اش با ما.
                 </p>
+
+                <a href="/contact" wire:navigate class="rx-btn rx-btn-primary mt-7 rx-reveal">
+                    <span>همین الان شروع کن</span>
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+            </aside>
+
+            <div class="rx-method-list">
+                @foreach ($processSteps as $step)
+                    <div class="rx-method-step rx-reveal">
+                        <div class="rx-method-num">
+                            <i class="{{ $step['icon'] }}"></i>
+                        </div>
+
+                        <div class="rx-method-line"></div>
+
+                        <div>
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="rx-caption rx-soft font-mono">{{ $step['number'] }}</span>
+                                <h3 class="rx-h3">{{ $step['title'] }}</h3>
+                            </div>
+
+                            <p class="rx-body rx-muted">{{ $step['text'] }}</p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
+    <section
+        class="rx-section section-tone-light"
+        data-rx-scene
+        data-scene-id="why"
+        data-scene-color="#45C8FF"
+        data-scene-intensity="1.05"
+        data-scene-speed="1"
+    >
+        <div class="rx-container relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-14">
+                <span class="rx-eyebrow rx-reveal">// WHY RENDIX</span>
+
+                <h2 class="rx-h1 mt-4 rx-reveal">
+                    چرا رندیکس
+                    <span class="rx-gradient-text">متفاوته؟</span>
+                </h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach ($whyItems as $item)
+                    <div class="rx-panel p-7 rx-reveal">
+                        <div class="rx-card-content">
+                            <div class="rx-icon-tile mb-5" style="width:3rem;height:3rem;border-radius:1rem;display:inline-flex;align-items:center;justify-content:center;color:var(--rx-section-accent);background:var(--rx-surface);border:1px solid var(--rx-border);font-size:1.15rem;">
+                                <i class="{{ $item['icon'] }}"></i>
+                            </div>
+
+                            <h3 class="rx-h3">{{ $item['title'] }}</h3>
+                            <p class="rx-body rx-muted mt-3">{{ $item['text'] }}</p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
+    <section
+        id="faq"
+        class="rx-section rx-section-alt section-tone-purple"
+        data-rx-scene
+        data-scene-id="faq"
+        data-scene-color="#7653F6"
+        data-scene-intensity="1.18"
+        data-scene-speed="0.9"
+    >
+        <div class="rx-container relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                <div class="lg:col-span-4">
+                    <span class="rx-eyebrow rx-reveal">// FAQ</span>
+
+                    <h2 class="rx-h1 mt-4 rx-reveal">
+                        سوالاتی که
+                        <span class="rx-gradient-text">خیلی‌ها می‌پرسن</span>
+                    </h2>
+
+                    <p class="rx-body-lg rx-muted mt-5 rx-reveal">
+                        اگر جواب سوالت اینجا نبود، مستقیم با ما صحبت کن.  
+                        مشاوره اولیه رایگانه و بدون تعهد.
+                    </p>
+
+                    <a href="/contact" wire:navigate class="rx-btn rx-btn-outline mt-7 rx-reveal">
+                        <span>پرسیدن سوال شخصی</span>
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </a>
+                </div>
+
+                <div class="lg:col-span-8 space-y-3">
+                    @foreach ($faqs as $faq)
+                        @php $isOpen = $loop->first; @endphp
+
+                        <div class="rx-faq-item rx-reveal" data-faq>
+                            <button
+                                type="button"
+                                class="rx-faq-trigger"
+                                data-faq-toggle
+                                aria-expanded="{{ $isOpen ? 'true' : 'false' }}"
+                            >
+                                <span>{{ $faq['name'] }}</span>
+
+                                <span class="rx-faq-icon {{ $isOpen ? 'is-open' : '' }}">
+                                    <i class="fa-solid fa-plus"></i>
+                                </span>
+                            </button>
+
+                            <div class="rx-faq-panel {{ $isOpen ? 'is-open' : '' }}" data-faq-panel>
+                                <div class="rx-faq-panel-inner">
+                                    <div class="rx-faq-answer">
+                                        {{ $faq['text'] }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section
+        class="rx-section section-tone-primary"
+        data-rx-scene
+        data-scene-id="cta"
+        data-scene-color="#1769FF"
+        data-scene-intensity="1.2"
+        data-scene-speed="1.1"
+    >
+        <div class="rx-container relative z-10">
+            <div class="rx-cta rx-reveal">
+                <div class="rx-cta-inner p-8 md:p-12 text-center">
+                    <span class="rx-badge">
+                        <i class="fa-solid fa-rocket"></i>
+                        زمان شروع
+                    </span>
+
+                    <h2 class="rx-display mt-6">
+                        آماده‌ای
+                        <span class="rx-gradient-text">دنیای دیجیتال</span><br>
+                        کسب‌وکارت رو بسازی؟
+                    </h2>
+
+                    <p class="rx-body-lg rx-muted mt-7 max-w-2xl mx-auto">
+                        اولین قدم فقط یک گفتگوی کوتاهه.  
+                        بیا ببینیم رندیکس چطور می‌تونه برند تو رو دیده‌شدنی، باورکردنی و فروش‌محور کنه.
+                    </p>
+
+                    <div class="flex flex-wrap items-center justify-center gap-3 mt-9">
+                        <a href="/contact" wire:navigate class="rx-btn rx-btn-primary">
+                            <span>مشاوره رایگان</span>
+                            <i class="fa-solid fa-rocket"></i>
+                        </a>
+
+                        <a href="tel:+989000000000" class="rx-btn rx-btn-outline">
+                            <span>تماس تلفنی</span>
+                            <i class="fa-solid fa-phone"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </section>

@@ -10,8 +10,18 @@ export default {
     ],
     theme: {
         extend: {
+            colors: {
+                rx: {
+                    navy: '#071329',
+                    primary: '#1769FF',
+                    light: '#45C8FF',
+                    purple: '#7653F6',
+                    white: '#F7F9FF',
+                },
+            },
             fontFamily: {
-                sans: ['Vazirmatn', 'sans-serif'],
+                sans: ['Vazirmatn', 'system-ui', '-apple-system', 'sans-serif'],
+                mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
             },
         },
     },
