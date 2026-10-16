@@ -1,67 +1,100 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="https://img.shields.io/badge/Laravel-10-FF2D20?logo=laravel&logoColor=white" />
+  <img src="https://img.shields.io/badge/Livewire-4-00A3FF?logo=livewire" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react" />
+  <img src="https://img.shields.io/badge/Three.js-R3F-000000?logo=three.js" />
+  <img src="https://img.shields.io/badge/Tailwind-3.4-06B6D4?logo=tailwindcss" />
+  <img src="https://img.shields.io/badge/License-MIT-green" />
 </p>
 
-## About Laravel
+<h1 align="center">✨ Rendix — رندیکس</h1>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+<p align="center">
+  <strong>پلتفرم تخصصی طراحی وب‌سایت، سئو و دیجیتال مارکتینگ</strong><br/>
+  A modern, high-performance, animated web platform built with Laravel 10, Livewire 4, React 19, Three.js, and GSAP.
+</p>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+<p align="center">
+  <a href="#overview">معرفی</a> •
+  <a href="#tech-stack">تکنولوژی‌ها</a> •
+  <a href="#features">ویژگی‌ها</a> •
+  <a href="#getting-started">شروع سریع</a> •
+  <a href="#project-structure">ساختار پروژه</a>
+</p>
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🌐 Overview / معرفی
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+**رندیکس** یک پلتفرم وب‌سایت مدرن، های‌پرفورمنس و انیمیشنی است که با هدف ارائه‌ی خدمات تخصصی طراحی وب‌سایت، سئو و دیجیتال مارکتینگ (با تمرکز ویژه روی بازار محلی نجف‌آباد، اصفهان و سراسر ایران) توسعه داده شده است. این پروژه با ترکیب قدرت بک‌اند لاراول و پویایی فرانت‌اند React/3D، استانداردهای UI/UX جهانی را پیاده‌سازی کرده است.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+**Rendix** is a modern, high-performance, animation-rich web platform offering professional web design, SEO, and digital marketing services. Built with a hybrid architecture—Laravel powering the routing, SEO, and layouts; Livewire (Volt) handling SPA-style navigation; and React + Three.js delivering an immersive visual layer—Rendix sets a new standard for agency websites.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 🛠️ Tech Stack
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+| لایه / Layer | تکنولوژی / Technology |
+|:---|:---|
+| **بک‌اند** | Laravel 10 |
+| **SPA Navigation** | Livewire 4 + Volt 1.x (`wire:navigate`) |
+| **فرانت‌اند** | React 19 + Vite 5 |
+| **3D Graphics** | Three.js + React Three Fiber + `@react-three/drei` |
+| **Animations** | GSAP 3 + `@gsap/react` |
+| **Styling** | Tailwind CSS 3.4 + RTL + Dark/Light mode |
+| **Typography** | Vazirmatn (Persian) |
+| **Build Tool** | Vite + `laravel-vite-plugin` |
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## ✨ Features
 
-## Contributing
+- 🌌 **Persistent 3D Background** — GPU-accelerated Particle Plexus Network using `Points` & `LineSegments` that reacts to mouse movement and scroll
+- 🌓 **Smart Dark/Light Mode** — `localStorage`-persisted theme with zero flash on initial load
+- 🚀 **SPA-like Navigation** — seamless page transitions via `wire:navigate` without page reloads
+- 📱 **Mobile-First Responsive** — Bento Grid system + Floating Pill Navbar
+- 🔍 **SEO-Optimized** — SSR-friendly Blade pages with per-page meta tags, JSON-LD schema, and sitemap
+- ⚡ **High Performance** — Lazy-loaded 3D canvas, optimized font loading, reduced-motion support
+- 🇮🇷 **Full RTL Support** — Native right-to-left layout with Vazirmatn font
+- 🎬 **GSAP Reveal Animations** — Content enters the viewport with smooth choreography
+- ♿ **Accessibility** — `prefers-reduced-motion`, `aria-hidden` on canvas, keyboard navigation
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 🚀 Getting Started
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Prerequisites
 
-## Security Vulnerabilities
+- PHP ≥ 8.1
+- Composer
+- Node.js ≥ 18
+- MySQL / PostgreSQL / SQLite
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Installation
 
-## License
+```bash
+# Clone the repository
+git clone https://github.com/mahourkimiaeifar/Rendix.git
+cd Rendix
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# Rendix
+# Install PHP dependencies
+composer install
+
+# Install JS dependencies
+npm install
+
+# Copy environment file
+cp .env.example .env
+
+# Generate application key
+php artisan key:generate
+
+# Configure database in .env, then run migrations
+php artisan migrate
+
+# Build assets
+npm run build
+
+# Start development server
+php artisan serve
+npm run dev
