@@ -1,199 +1,73 @@
-<?php
+<div>
+    <footer class="relative mt-32 border-t border-white/5 bg-navy-2/40">
+        <div class="max-w-7xl mx-auto px-5 md:px-10 py-16">
 
-use Livewire\Volt\Component;
-
-new class extends Component {
-    //
-}; ?>
-
-@php
-    $serviceLinks = [
-        ['title' => 'دیجیتال مارکتینگ', 'href' => '/#digital-marketing', 'icon' => 'fa-solid fa-bullhorn'],
-        ['title' => 'طراحی وبسایت', 'href' => '/#web-design', 'icon' => 'fa-solid fa-code'],
-        ['title' => 'سئو و گوگل', 'href' => '/#seo', 'icon' => 'fa-solid fa-magnifying-glass-chart'],
-        ['title' => 'شبکه‌های اجتماعی', 'href' => '/#social-media', 'icon' => 'fa-solid fa-share-nodes'],
-        ['title' => 'فروشگاه اینترنتی', 'href' => '/#ecommerce', 'icon' => 'fa-solid fa-bag-shopping'],
-        ['title' => 'پشتیبانی سایت', 'href' => '/#support', 'icon' => 'fa-solid fa-headset'],
-    ];
-
-    $companyLinks = [
-        ['title' => 'فرآیند همکاری', 'href' => '/#process', 'icon' => 'fa-solid fa-route'],
-        ['title' => 'سوالات متداول', 'href' => '/#faq', 'icon' => 'fa-solid fa-circle-question'],
-        ['title' => 'درباره رندیکس', 'href' => '/about', 'icon' => 'fa-solid fa-user-group', 'navigate' => true],
-        ['title' => 'مشاوره رایگان', 'href' => '/contact', 'icon' => 'fa-solid fa-paper-plane', 'navigate' => true],
-    ];
-
-    $coverageAreas = ['نجف‌آباد', 'اصفهان', 'شهرضا', 'خمینی‌شهر', 'لنجان', 'سراسر ایران'];
-
-    $trustItems = [
-        ['icon' => 'fa-solid fa-file-contract', 'title' => 'قرارداد شفاف'],
-        ['icon' => 'fa-solid fa-bolt', 'title' => 'تحویل به‌موقع'],
-        ['icon' => 'fa-solid fa-shield-halved', 'title' => 'پشتیبانی مستمر'],
-    ];
-@endphp
-
-<footer class="rx-footer">
-    <div class="rx-footer-top-line"></div>
-
-    <div class="rx-container py-14 md:py-16">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12">
-            <div class="sm:col-span-2 lg:col-span-4">
-                <a href="/" wire:navigate class="rx-logo-link mb-6" aria-label="صفحه اصلی رندیکس">
-                    <img src="/images/logo.png?v=5" alt="لوگوی رندیکس" width="180" height="70" loading="lazy"
-                        decoding="async" class="rx-logo-img h-14 md:h-16 w-auto">
-                    <span class="sr-only">رندیکس</span>
-                </a>
-
-                <p class="rx-body rx-muted max-w-md">
-                    رندیکس یک استودیوی فنی-خلاق برای طراحی وبسایت، سئو، دیجیتال مارکتینگ و رشد آنلاین است.
-                    ما با توجه به سرعت، کیفیت فنی، تجربه کاربری و نتیجه تجاری، سیستم دیجیتال کسب‌وکار را می‌سازیم.
-                </p>
-
-                <div class="rx-stack mt-6">
-                    @foreach ($trustItems as $trust)
-                        <span class="rx-chip">
-                            <i class="{{ $trust['icon'] }}"></i>
-                            {{ $trust['title'] }}
-                        </span>
-                    @endforeach
+            {{-- بالا: برند + خبرنامه --}}
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 pb-12 border-b border-white/5">
+                <div class="space-y-3 max-w-md">
+                    <div class="flex items-center gap-3">
+                        <img src="/images/favicon.png?v=6" alt="رندیکس" class="w-11 h-11">
+                        <span class="text-2xl font-black">رندیکس</span>
+                    </div>
+                    <p class="text-sm text-snow/50 leading-7">
+                        ما فقط وبسایت نمی‌سازیم؛ مسیر رشد می‌سازیم. از نجف‌آباد، برای کسب‌وکارهایی که می‌خوان جدی دیده بشن.
+                    </p>
                 </div>
 
-                <div class="flex items-center gap-2 mt-7">
-                    <a href="#" class="rx-icon-btn" aria-label="اینستاگرام رندیکس">
-                        <i class="fa-brands fa-instagram"></i>
-                    </a>
-
-                    <a href="#" class="rx-icon-btn" aria-label="لینکدین رندیکس">
-                        <i class="fa-brands fa-linkedin-in"></i>
-                    </a>
-
-                    <a href="https://t.me/RendixDMServices" target="_blank" rel="noopener noreferrer"
-                        class="rx-icon-btn" aria-label="کانال تلگرام رندیکس">
-                        <i class="fa-brands fa-telegram"></i>
-                    </a>
+                <div class="w-full max-w-md">
+                    <p class="text-sm font-bold mb-3 text-snow/70">عضویت در خبرنامه رشد</p>
+                    <form class="flex gap-2">
+                        <input type="email" placeholder="ایمیل شما"
+                               class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-snow/30 focus:outline-none focus:border-sky/50 transition-colors">
+                        <button type="submit" class="btn btn-primary !px-5">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
                 </div>
             </div>
 
-            <div class="lg:col-span-2">
-                <h4 class="rx-h3 mb-5">خدمات</h4>
-
-                <ul class="space-y-3">
-                    @foreach ($serviceLinks as $link)
-                        <li>
-                            <a href="{{ $link['href'] }}"
-                                class="rx-body rx-muted hover:rx-text-light transition-colors inline-flex items-center gap-2">
-                                <i class="{{ $link['icon'] }} rx-text-primary"></i>
-                                {{ $link['title'] }}
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
-
-            <div class="lg:col-span-2">
-                <h4 class="rx-h3 mb-5">مسیر همکاری</h4>
-
-                <ul class="space-y-3">
-                    @foreach ($companyLinks as $link)
-                        <li>
-                            <a href="{{ $link['href'] }}" @if(!empty($link['navigate'])) wire:navigate @endif
-                                class="rx-body rx-muted hover:rx-text-light transition-colors inline-flex items-center gap-2">
-                                <i class="{{ $link['icon'] }} rx-text-purple"></i>
-                                {{ $link['title'] }}
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
-
-            <div class="sm:col-span-2 lg:col-span-4">
-                <div class="rx-panel p-6 h-full">
-                    <div class="rx-card-content">
-                        <h4 class="rx-h3 mb-5">اطلاعات تماس</h4>
-
-                        <ul class="space-y-4">
-                            <li class="flex items-start gap-3">
-                                <i class="fa-solid fa-phone mt-1 rx-text-primary"></i>
-                                <div>
-                                    <p class="rx-caption rx-soft">تلفن</p>
-                                    <a href="tel:+989000000000"
-                                        class="rx-body font-bold hover:rx-text-light transition-colors rx-breakable">
-                                        ۰۹۰-۰۰۰-۰۰۰۰
-                                    </a>
-                                </div>
-                            </li>
-
-                            <li class="flex items-start gap-3">
-                                <i class="fa-solid fa-envelope mt-1 rx-text-purple"></i>
-                                <div>
-                                    <p class="rx-caption rx-soft">ایمیل</p>
-                                    <a href="mailto:hello@rendix.ir"
-                                        class="rx-body font-bold hover:rx-text-light transition-colors rx-breakable">
-                                        hello@rendix.ir
-                                    </a>
-                                </div>
-                            </li>
-
-                            <li class="flex items-start gap-3">
-                                <i class="fa-solid fa-location-dot mt-1 rx-text-light"></i>
-                                <div>
-                                    <p class="rx-caption rx-soft">موقعیت</p>
-                                    <p class="rx-body font-bold">نجف‌آباد، اصفهان، ایران</p>
-                                </div>
-                            </li>
-
-                            <li class="flex items-start gap-3">
-                                <i class="fa-solid fa-clock mt-1 rx-text-primary"></i>
-                                <div>
-                                    <p class="rx-caption rx-soft">ساعات کاری</p>
-                                    <p class="rx-body font-bold">شنبه تا چهارشنبه | ۹ صبح تا ۶ عصر</p>
-                                </div>
-                            </li>
-                        </ul>
-
-                        <div class="mt-6 pt-5 border-t" style="border-color: var(--rx-border);">
-                            <p class="rx-caption rx-soft mb-3">مناطق تحت پوشش</p>
-
-                            <div class="rx-stack">
-                                @foreach ($coverageAreas as $area)
-                                    <span class="rx-chip">
-                                        <i class="fa-solid fa-location-dot"></i>
-                                        {{ $area }}
-                                    </span>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
-                            <a href="/contact" wire:navigate class="rx-btn rx-btn-primary w-full">
-                                <span>مشاوره رایگان</span>
-                                <i class="fa-solid fa-arrow-left"></i>
-                            </a>
-
-                            <a href="https://maps.google.com/?q=%D9%86%D8%AC%D9%81%E2%80%8C%D8%A2%D8%A8%D8%A7%D8%8C%20%D8%A7%D8%B5%D9%81%D9%87%D8%A7%D9%86"
-                                target="_blank" rel="noopener noreferrer" class="rx-btn rx-btn-outline w-full">
-                                <span>مشاهده موقعیت</span>
-                                <i class="fa-solid fa-map-location-dot"></i>
-                            </a>
-                        </div>
+            {{-- لینک‌ها --}}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-10 py-12">
+                <div class="space-y-4">
+                    <p class="font-bold text-sm">رندیکس</p>
+                    <ul class="space-y-3 text-sm text-snow/50">
+                        <li><a href="/about" wire:navigate class="hover:text-sky transition-colors">درباره ما</a></li>
+                        <li><a href="/contact" wire:navigate class="hover:text-sky transition-colors">تماس با ما</a></li>
+                        <li><a href="/#faq" class="hover:text-sky transition-colors">سوالات متداول</a></li>
+                    </ul>
+                </div>
+                <div class="space-y-4">
+                    <p class="font-bold text-sm">خدمات</p>
+                    <ul class="space-y-3 text-sm text-snow/50">
+                        <li><a href="/#services" class="hover:text-sky transition-colors">دیجیتال مارکتینگ</a></li>
+                        <li><a href="/#services" class="hover:text-sky transition-colors">طراحی وبسایت</a></li>
+                        <li><a href="/#services" class="hover:text-sky transition-colors">سئو</a></li>
+                        <li><a href="/#services" class="hover:text-sky transition-colors">فروشگاه اینترنتی</a></li>
+                    </ul>
+                </div>
+                <div class="space-y-4">
+                    <p class="font-bold text-sm">تماس</p>
+                    <ul class="space-y-3 text-sm text-snow/50">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-location-dot text-sky/70"></i> نجف‌آباد، اصفهان</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-envelope text-sky/70"></i> info@rendix.ir</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-phone text-sky/70"></i> ۰۹۱۲ ۳۴۵ ۶۷۸۹</li>
+                    </ul>
+                </div>
+                <div class="space-y-4">
+                    <p class="font-bold text-sm">همراه ما باشید</p>
+                    <div class="flex gap-3">
+                        <a href="#" class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-snow/60 hover:text-sky hover:border-sky/40 transition-all"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-snow/60 hover:text-sky hover:border-sky/40 transition-all"><i class="fa-brands fa-telegram"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-snow/60 hover:text-sky hover:border-sky/40 transition-all"><i class="fa-brands fa-linkedin-in"></i></a>
                     </div>
                 </div>
             </div>
+
+            {{-- پایین --}}
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-white/5 text-xs text-snow/35">
+                <p>© ۱۴۰۴ رندیکس — تمامی حقوق محفوظ است.</p>
+                <p class="flex items-center gap-1.5">ساخته‌شده با <i class="fa-solid fa-heart text-primary"></i> در نجف‌آباد</p>
+            </div>
         </div>
-
-        <div class="mt-12 pt-7 border-t flex flex-col md:flex-row items-center justify-between gap-4"
-            style="border-color: var(--rx-border);">
-            <p class="rx-caption rx-soft text-center md:text-right">
-                © ۱۴ رندیکس. تمام حقوق محفوظ است.
-            </p>
-
-            <p class="rx-caption rx-soft font-mono text-center">
-                طراحی و توسعه با <i class="fa-solid fa-heart rx-text-purple"></i> توسط رندیکس
-            </p>
-
-            <p class="rx-caption rx-soft text-center md:text-left">
-                نسخه وب: <span class="rx-text-light font-mono">Rendix 3.0</span>
-            </p>
-        </div>
-    </div>
-</footer>
+    </footer>
+</div>
