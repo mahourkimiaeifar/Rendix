@@ -245,13 +245,13 @@
 
     <div id="rendix-canvas" class="fixed inset-0 -z-10 pointer-events-none" aria-hidden="true"></div>
 
-    <livewire:navbar />
+    <livewire:layouts.navbar />
 
     <main class="relative">
         {{ $slot }}
     </main>
 
-    <livewire:footer />
+    <livewire:layouts.footer />
 
     <button id="rx-back-top" type="button" aria-label="بازگشت به بالا">
         <i class="fa-solid fa-arrow-up"></i>
