@@ -1,7 +1,7 @@
 {
     "name": "mahourkimiaeifar/rendix",
     "type": "project",
-    "description": "Rendix — A modern, high-performance web platform for web design, SEO, and digital marketing services.",
+    "description": "Rendix \u2014 A modern, high-performance web platform for web design, SEO, and digital marketing services.",
     "keywords": [
         "rendix",
         "laravel",
@@ -29,6 +29,7 @@
         "laravel/tinker": "^2.8",
         "livewire/livewire": "^3.5",
         "livewire/volt": "^1.6",
+        "morilog/jalali": "^3.5",
         "spatie/laravel-sitemap": "^7.0"
     },
     "require-dev": {
