@@ -1,23 +1,25 @@
 <?php
 
-use Illuminate\Support\Facades\Log;
+use App\Models\Lead;
+use App\Services\ActivityLogger;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Volt\Component;
 use Livewire\Attributes\Validate;
 
 new class extends Component {
-    #[Validate('required|string|min:3|max:120')]
+    #[Validate('required|string|min:3|max:120', as: 'نام')]
     public string $name = '';
 
-    #[Validate('required|email|max:190')]
+    #[Validate('required|email|max:190', as: 'ایمیل')]
     public string $email = '';
 
-    #[Validate('required|string|min:10|max:20')]
+    #[Validate('required|string|min:10|max:20', as: 'شماره تماس')]
     public string $phone = '';
 
-    #[Validate('required|string')]
+    #[Validate('required|string', as: 'خدمت مورد نظر')]
     public string $service = '';
 
-    #[Validate('required|string|min:20|max:3000')]
+    #[Validate('required|string|min:20|max:3000', as: 'پیام')]
     public string $message = '';
 
     public bool $sent = false;
@@ -26,15 +28,40 @@ new class extends Component {
     {
         $this->validate();
 
-        Log::info('Rendix contact lead received', [
+        $key = 'rendix-contact:' . request()->ip();
+
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $this->addError('message', 'برای جلوگیری از اسپم، لطفاً چند دقیقه صبر کن و دوباره تلاش کن.');
+
+            return;
+        }
+
+        $lead = Lead::create([
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
             'service' => $this->service,
             'message' => $this->message,
+            'source_page' => '/' . ltrim(request()->path(), '/'),
+            'status' => 'new',
+            'priority' => 'normal',
+            'metadata' => [
+                'user_agent' => request()->userAgent(),
+                'ip' => request()->ip(),
+                'referer' => request()->header('referer'),
+                'query' => request()->query(),
+            ],
         ]);
 
+        ActivityLogger::log('lead.created', $lead, [
+            'service' => $lead->service,
+            'source_page' => $lead->source_page,
+        ]);
+
+        RateLimiter::hit($key, 60 * 10);
+
         $this->sent = true;
+
         $this->reset('name', 'email', 'phone', 'service', 'message');
     }
 };
