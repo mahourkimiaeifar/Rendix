@@ -452,8 +452,8 @@
                                     </div>
                                 @endif
 
-                                <a href="{{ route('contact', ['service' => $service->slug]) }}" class="rx-service-link">
-                                    درخواست این خدمت
+                                <a href="{{ route('services.show', $service->slug) }}" class="rx-service-link">
+                                    مشاهده خدمت
                                     <i class="fa-solid fa-arrow-left"></i>
                                 </a>
                             </div>

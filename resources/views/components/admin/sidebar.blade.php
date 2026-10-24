@@ -26,6 +26,12 @@
                 <i class="fa-solid fa-user-clock"></i>
                 <span>سرنخ‌ها</span>
             </a>
+
+            <a href="{{ route('admin.project-requests.index') }}"
+                class="admin-nav-item {{ request()->routeIs('admin.project-requests.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <span>درخواست‌های پروژه</span>
+            </a>
         </div>
         <div class="admin-nav-group">
             <p class="admin-nav-title">محتوا و اعتماد</p>
@@ -48,6 +54,35 @@
                 <span>سوالات متداول</span>
             </a>
         </div>
+
+        <div class="admin-nav-group">
+            <p class="admin-nav-title">محتوا و بلاگ</p>
+
+            <a href="{{ route('admin.posts.index') }}"
+                class="admin-nav-item {{ request()->routeIs('admin.posts.*') ? 'active' : '' }}">
+                <i class="fa-solid fa-newspaper"></i>
+                <span>مقالات</span>
+            </a>
+
+            <a href="{{ route('admin.categories') }}"
+                class="admin-nav-item {{ request()->routeIs('admin.categories') ? 'active' : '' }}">
+                <i class="fa-solid fa-folder-tree"></i>
+                <span>دسته‌بندی‌ها</span>
+            </a>
+
+            <a href="{{ route('admin.tags') }}"
+                class="admin-nav-item {{ request()->routeIs('admin.tags') ? 'active' : '' }}">
+                <i class="fa-solid fa-tags"></i>
+                <span>تگ‌ها</span>
+            </a>
+
+            <a href="{{ route('admin.pages') }}"
+                class="admin-nav-item {{ request()->routeIs('admin.pages') ? 'active' : '' }}">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>صفحات اختصاصی</span>
+            </a>
+        </div>
+        
         <div class="admin-nav-group">
             <p class="admin-nav-title">محتوا</p>
 
@@ -78,6 +113,12 @@
 
         <div class="admin-nav-group">
             <p class="admin-nav-title">سیستم</p>
+
+            <a href="{{ route('admin.diagnostics') }}"
+                class="admin-nav-item {{ request()->routeIs('admin.diagnostics') ? 'active' : '' }}">
+                <i class="fa-solid fa-stethoscope"></i>
+                <span>تشخیص سایت</span>
+            </a>
 
             <a href="#" class="admin-nav-item disabled">
                 <i class="fa-solid fa-sliders"></i>

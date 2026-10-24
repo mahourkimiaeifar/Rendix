@@ -18,8 +18,7 @@
                     خانه
                 </a>
 
-                <a href="/#services"
-                    class="text-sm font-medium text-[var(--rx-fg-muted)] transition-colors duration-300 hover:text-[var(--rx-accent-text)]">
+                <a href="{{ route('services') }}" wire:navigate class="hover:text-sky transition-colors">
                     خدمات
                 </a>
 
@@ -35,8 +34,30 @@
 
                 <a href="{{ route('projects') }}">نمونه‌کارها</a>
 
-                <x-site.admin-link />
+                <a href="{{ route('request-project') }}" wire:navigate>درخواست پروژه</a>
 
+                @auth
+                    <a href="{{ route('dashboard') }}" wire:navigate class="hover:text-sky transition-colors">
+                        داشبورد من
+                    </a>
+
+                    <form method="POST" action="{{ route('logout') }}" class="inline">
+                        @csrf
+                        <button type="submit"
+                            class="hover:text-sky transition-colors bg-transparent border-0 p-0 font-inherit text-inherit cursor-pointer">
+                            خروج
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" wire:navigate class="hover:text-sky transition-colors">
+                        ورود
+                    </a>
+
+                    <a href="{{ route('register') }}" wire:navigate class="btn btn-primary !py-2 !px-4 text-sm">
+                        ثبت‌نام
+                    </a>
+                @endauth
+                <x-site.admin-link />
             </div>
 
             {{-- اکشن‌ها --}}
@@ -69,8 +90,7 @@
                 خانه
             </a>
 
-            <a href="/#services"
-                class="block py-3 px-4 rounded-xl text-[var(--rx-fg-muted)] hover:text-[var(--rx-accent-text)] hover:bg-[var(--rx-panel)] transition-colors">
+            <a href="{{ route('services') }}" wire:navigate class="hover:text-sky transition-colors">
                 خدمات
             </a>
 
@@ -86,8 +106,30 @@
 
             <a href="{{ route('projects') }}">نمونه‌کارها</a>
 
-            <x-site.admin-link />
+            <a href="{{ route('request-project') }}" wire:navigate>درخواست پروژه</a>
 
+            @auth
+                <a href="{{ route('dashboard') }}" wire:navigate class="hover:text-sky transition-colors">
+                    داشبورد من
+                </a>
+
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <button type="submit"
+                        class="hover:text-sky transition-colors bg-transparent border-0 p-0 font-inherit text-inherit cursor-pointer">
+                        خروج
+                    </button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" wire:navigate class="hover:text-sky transition-colors">
+                    ورود
+                </a>
+
+                <a href="{{ route('register') }}" wire:navigate class="btn btn-primary !py-2 !px-4 text-sm">
+                    ثبت‌نام
+                </a>
+            @endauth
+            <x-site.admin-link />
             <a href="/contact" wire:navigate class="btn btn-primary w-full mt-3">
                 مشاوره رایگان
                 <i class="fa-solid fa-arrow-left text-xs"></i>

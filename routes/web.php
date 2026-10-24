@@ -11,6 +11,39 @@ Volt::route('/contact', 'pages.contact-page')->name('contact');
 Volt::route('/projects', 'pages.projects-page')->name('projects');
 Volt::route('/projects/{slug}', 'pages.project-page')->name('projects.show');
 
+Volt::route('/services', 'pages.services-page')->name('services');
+Volt::route('/services/{slug}', 'pages.service-page')->name('services.show');
+
+Volt::route('/request-project', 'pages.request-project-page')->name('request-project');
+Volt::route('/request-project/{code}', 'pages.request-tracking-page')->name('request-project.show');
+
+Volt::route('/blog', 'pages.blog-page')->name('blog');
+Volt::route('/blog/{slug}', 'pages.post-page')->name('blog.show');
+
+Volt::route('/category/{slug}', 'pages.category-page')->name('category');
+Volt::route('/tag/{slug}', 'pages.tag-page')->name('tag');
+
+Volt::route('/page/{slug}', 'pages.page-page')->name('page');
+
+Volt::route('/register', 'auth.register-page')->name('register');
+Volt::route('/login', 'auth.login-page')->name('login');
+
+Route::post('/logout', function () {
+    Auth::logout();
+
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+
+    return redirect()->route('home');
+})->middleware('auth')->name('logout');
+
+Route::middleware('auth')->group(function () {
+    Volt::route('/dashboard', 'customer.dashboard-page')->name('dashboard');
+    Volt::route('/dashboard/requests', 'customer.requests-page')->name('customer.requests');
+    Volt::route('/dashboard/requests/{code}', 'customer.request-show-page')->name('customer.requests.show');
+    Volt::route('/dashboard/profile', 'customer.profile-page')->name('customer.profile');
+});
+
 Route::get('/sitemap.xml', function () {
     $urls = collect();
 
@@ -50,6 +83,15 @@ Route::get('/sitemap.xml', function () {
         ]);
     }
 
+    if (Route::has('services')) {
+        $urls->push([
+            'loc' => route('services'),
+            'lastmod' => now()->toAtomString(),
+            'changefreq' => 'weekly',
+            'priority' => '0.9',
+        ]);
+    }
+
     try {
         $projects = \App\Models\Project::query()
             ->active()
@@ -67,7 +109,27 @@ Route::get('/sitemap.xml', function () {
             }
         }
     } catch (\Throwable $e) {
-        // اگر جدول projects هنوز نبود، sitemap خراب نشود
+        //
+    }
+
+    try {
+        $services = \App\Models\Service::query()
+            ->active()
+            ->orderByDesc('updated_at')
+            ->get();
+
+        foreach ($services as $service) {
+            if (Route::has('services.show')) {
+                $urls->push([
+                    'loc' => route('services.show', $service->slug),
+                    'lastmod' => optional($service->updated_at)->toAtomString() ?? now()->toAtomString(),
+                    'changefreq' => 'monthly',
+                    'priority' => '0.8',
+                ]);
+            }
+        }
+    } catch (\Throwable $e) {
+        //
     }
 
     $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
@@ -130,6 +192,23 @@ Route::prefix(config('admin.prefix', 'admin'))
         Volt::route('/login', 'admin.login-page')->name('login');
 
         Route::middleware(['admin.auth'])->group(function () {
+            Route::get('/diagnostics', function () {
+                return response(
+                    \App\Support\SiteDiagnostics::render(),
+                    200
+                )->header('Content-Type', 'text/html; charset=UTF-8');
+            })->name('diagnostics');
+
+            Volt::route('/posts', 'admin.posts.index-page')->name('posts.index');
+            Volt::route('/posts/form', 'admin.posts.form-page')->name('posts.form');
+
+            Volt::route('/categories', 'admin.categories.index-page')->name('categories');
+            Volt::route('/tags', 'admin.tags.index-page')->name('tags');
+            Volt::route('/pages', 'admin.pages.index-page')->name('pages');
+
+            Volt::route('/project-requests', 'admin.project-requests.index-page')->name('project-requests.index');
+            Volt::route('/project-requests/show', 'admin.project-requests.show-page')->name('project-requests.show');
+
             Volt::route('/', 'admin.dashboard-page')->name('dashboard');
 
             Volt::route('/leads', 'admin.leads.index-page')->name('leads.index');

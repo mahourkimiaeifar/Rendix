@@ -270,7 +270,7 @@
         {{ $slot }}
     </main>
 
-    <livewire:layouts.footer />
+    <x-site.footer />
 
     <button id="rx-back-top" type="button" aria-label="بازگشت به بالا">
         <i class="fa-solid fa-arrow-up"></i>

@@ -65,7 +65,7 @@
     foreach ($socials as $social) {
         $url = trim((string) ($social['url'] ?? ''));
 
-        if ($social['label'] === 'واتساپ' && $url !== '' && ! filter_var($url, FILTER_VALIDATE_URL)) {
+        if ($social['label'] === 'واتساپ' && $url !== '' && !filter_var($url, FILTER_VALIDATE_URL)) {
             $url = 'https://wa.me/' . preg_replace('/\D/', '', \App\Support\Jalali::toLatinDigits($url));
         }
 
@@ -91,7 +91,8 @@
     <div class="max-w-7xl mx-auto px-5 md:px-10 py-16">
 
         {{-- بالا: برند + خبرنامه --}}
-        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 pb-12 border-b border-white/5">
+        <div
+            class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 pb-12 border-b border-white/5">
             <div class="space-y-3 max-w-md">
                 <div class="flex items-center gap-3">
                     <img src="{{ $logo }}" alt="{{ $siteName }}" class="w-11 h-11">
@@ -108,7 +109,7 @@
 
                 <form class="flex gap-2" onsubmit="return false;">
                     <input type="email" placeholder="ایمیل شما"
-                           class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-snow/30 focus:outline-none focus:border-sky/50 transition-colors">
+                        class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-snow/30 focus:outline-none focus:border-sky/50 transition-colors">
                     <button type="submit" class="btn btn-primary !px-5">
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
@@ -128,6 +129,11 @@
                         </a>
                     </li>
                     <li>
+                        <a href="{{ route('request-project') }}" wire:navigate class="hover:text-sky transition-colors">
+                            درخواست پروژه
+                        </a>
+                    </li>
+                    <li>
                         <a href="{{ route('contact') }}" wire:navigate class="hover:text-sky transition-colors">
                             تماس با ما
                         </a>
@@ -142,6 +148,18 @@
                     @endif
 
                     <li>
+                        @auth
+                            <a href="{{ route('dashboard') }}" wire:navigate class="hover:text-sky transition-colors">
+                                داشبورد من
+                            </a>
+                        @else
+                            <a href="{{ route('login') }}" wire:navigate class="hover:text-sky transition-colors">
+                                ورود / ثبت‌نام
+                            </a>
+                        @endauth
+                    </li>
+                    
+                    <li>
                         <a href="{{ url('/#faq') }}" class="hover:text-sky transition-colors">
                             سوالات متداول
                         </a>
@@ -155,7 +173,7 @@
                 <ul class="space-y-3 text-sm text-snow/50">
                     @foreach ($footerServices as $slug => $title)
                         <li>
-                            <a href="{{ route('contact', ['service' => $slug]) }}" class="hover:text-sky transition-colors">
+                            <a href="{{ route('services.show', $slug) }}" class="hover:text-sky transition-colors">
                                 {{ $title }}
                             </a>
                         </li>
@@ -199,23 +217,14 @@
 
                 <div class="flex gap-3">
                     @forelse ($preparedSocials as $social)
-                        <a
-                            href="{{ $social['url'] }}"
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        <a href="{{ $social['url'] }}" target="_blank" rel="noopener noreferrer"
                             title="{{ $social['label'] }}"
-                            class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-snow/60 hover:text-sky hover:border-sky/40 transition-all"
-                        >
+                            class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-snow/60 hover:text-sky hover:border-sky/40 transition-all">
                             <i class="{{ $social['icon'] }}"></i>
                         </a>
                     @empty
-                        <a
-                            href="https://t.me/RendixDMServices"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="تلگرام"
-                            class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-snow/60 hover:text-sky hover:border-sky/40 transition-all"
-                        >
+                        <a href="https://t.me/RendixDMServices" target="_blank" rel="noopener noreferrer" title="تلگرام"
+                            class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-snow/60 hover:text-sky hover:border-sky/40 transition-all">
                             <i class="fa-brands fa-telegram"></i>
                         </a>
                     @endforelse
@@ -224,7 +233,8 @@
         </div>
 
         {{-- پایین --}}
-        <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-white/5 text-xs text-snow/35">
+        <div
+            class="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-white/5 text-xs text-snow/35">
             <p>
                 © {{ $jalaliYear }} {{ $siteName }} — تمامی حقوق محفوظ است.
             </p>
