@@ -2,13 +2,17 @@
 
 use App\Models\Lead;
 use App\Models\ProjectRequest;
+use App\Models\ProjectRequestAttachment;
 use App\Models\Service;
+use App\Support\ProjectRequestNotifier;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
+use Livewire\WithFileUploads;
 use Livewire\Volt\Component;
 
-new #[Layout('components.layouts.app')]
-    class extends Component {
+new #[Layout('components.layouts.app')] class extends Component {
+    use WithFileUploads;
+
     public int $step = 1;
 
     public string $name = '';
@@ -28,6 +32,25 @@ new #[Layout('components.layouts.app')]
     public string $timeline = '';
     public string $budget = '';
     public string $message = '';
+
+    public $attachments = [];
+
+    public function mount(): void
+    {
+        if (auth()->check()) {
+            $user = auth()->user();
+
+            $this->name = (string) ($user->name ?? '');
+            $this->email = (string) ($user->email ?? '');
+            $this->phone = (string) ($user->phone ?? '');
+        }
+
+        $requested = (string) request('service');
+
+        if ($requested !== '' && array_key_exists($requested, $this->serviceOptions())) {
+            $this->service = $requested;
+        }
+    }
 
     public function serviceOptions(): array
     {
@@ -53,6 +76,13 @@ new #[Layout('components.layouts.app')]
         $options['other'] = 'سایر / راهنمایی می‌خواهم';
 
         return $options;
+    }
+
+    public function removeAttachment(int $index): void
+    {
+        unset($this->attachments[$index]);
+
+        $this->attachments = array_values($this->attachments);
     }
 
     public function nextStep()
@@ -163,6 +193,16 @@ new #[Layout('components.layouts.app')]
                 'string',
                 'in:' . implode(',', array_keys(ProjectRequest::budgetOptions())),
             ],
+            'attachments' => ['nullable', 'array'],
+            'attachments.*' => [
+                'file',
+                'mimes:pdf,doc,docx,jpg,jpeg,png,webp,zip,rar',
+                'max:10240',
+            ],
+        ], [
+            'attachments.*.file' => 'فایل‌ها باید فایل معتبر باشند.',
+            'attachments.*.mimes' => 'فقط فایل‌های PDF، Word، تصویر، ZIP و RAR مجاز است.',
+            'attachments.*.max' => 'حجم هر فایل نباید بیشتر از ۱۰ مگابایت باشد.',
         ]);
 
         $key = 'rendix-project-request:' . request()->ip();
@@ -200,7 +240,25 @@ new #[Layout('components.layouts.app')]
             ],
         ]);
 
+        foreach ($this->attachments as $file) {
+            if (! $file) {
+                continue;
+            }
+
+            $path = $file->store('project-requests/' . $request->id, 'public');
+
+            ProjectRequestAttachment::create([
+                'project_request_id' => $request->id,
+                'path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'mime' => $file->getMimeType(),
+                'size' => $file->getSize(),
+            ]);
+        }
+
         RateLimiter::hit($key, 60 * 15);
+
+        ProjectRequestNotifier::created($request);
 
         return redirect()->route('request-project.show', [
             'code' => $request->tracking_code,
@@ -225,7 +283,43 @@ new #[Layout('components.layouts.app')]
         3 => 'جزئیات پروژه',
         4 => 'تأیید و ارسال',
     ];
+
+    $pageTitle = 'درخواست پروژه چندمرحله‌ای | ' . $siteName;
+    $pageDescription = 'پروژه دیجیتال خود را مرحله‌به‌مرحله تعریف کن؛ خدمت، بودجه، زمان‌بندی، فایل‌ها و اهداف را برای رندیکس ارسال کن.';
+    $canonical = route('request-project');
 @endphp
+
+@section('rendix.title', $pageTitle)
+@section('rendix.description', $pageDescription)
+@section('rendix.canonical', $canonical)
+@section('rendix.type', 'WebPage')
+
+@push('rendix.head')
+    <script type="application/ld+json">
+        {!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'FAQPage',
+            'mainEntity' => [
+                [
+                    '@type' => 'Question',
+                    'name' => 'چطور درخواست پروژه بدهم؟',
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => 'با پر کردن فرم چندمرحله‌ای درخواست پروژه، اطلاعات تماس، خدمت مورد نظر، جزئیات پروژه، بودجه و زمان‌بندی را برای رندیکس ارسال کنید.',
+                    ],
+                ],
+                [
+                    '@type' => 'Question',
+                    'name' => 'آیا می‌توانم فایل ضمیمه کنم؟',
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => 'بله. می‌توانید لوگو، بریف، تصاویر مرجع یا فایل‌های مرتبط با پروژه را در فرم درخواست پروژه آپلود کنید.',
+                    ],
+                ],
+            ],
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+    </script>
+@endpush
 
 <div>
     <section class="pt-36 pb-24 px-5 md:px-10">
@@ -255,7 +349,8 @@ new #[Layout('components.layouts.app')]
                     @foreach ($steps as $number => $label)
                         <div
                             class="rounded-2xl border px-4 py-3 text-center transition-all
-                                {{ $step === $number ? 'border-sky bg-sky/10 text-sky' : ($step > $number ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-300' : 'border-white/10 bg-white/5 text-snow/45') }}">
+                            {{ $step === $number ? 'border-sky bg-sky/10 text-sky' : ($step > $number ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-300' : 'border-white/10 bg-white/5 text-snow/45') }}"
+                        >
                             <div class="text-xs font-black mb-1">
                                 مرحله {{ $number }}
                             </div>
@@ -281,37 +376,58 @@ new #[Layout('components.layouts.app')]
                             <div class="grid md:grid-cols-2 gap-6">
                                 <div class="space-y-2">
                                     <label class="text-sm font-bold text-snow/70">نام و نام خانوادگی *</label>
-                                    <input type="text" wire:model="name" placeholder="مثلاً: علی رضایی"
-                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors">
+                                    <input
+                                        type="text"
+                                        wire:model="name"
+                                        placeholder="مثلاً: علی رضایی"
+                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors"
+                                    >
                                     @error('name') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="space-y-2">
                                     <label class="text-sm font-bold text-snow/70">شماره تماس *</label>
-                                    <input type="tel" wire:model="phone" placeholder="09xxxxxxxxx" dir="ltr"
-                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors">
+                                    <input
+                                        type="tel"
+                                        wire:model="phone"
+                                        placeholder="09xxxxxxxxx"
+                                        dir="ltr"
+                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors"
+                                    >
                                     @error('phone') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="space-y-2">
                                     <label class="text-sm font-bold text-snow/70">ایمیل *</label>
-                                    <input type="email" wire:model="email" placeholder="you@example.com" dir="ltr"
-                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors">
+                                    <input
+                                        type="email"
+                                        wire:model="email"
+                                        placeholder="you@example.com"
+                                        dir="ltr"
+                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors"
+                                    >
                                     @error('email') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="space-y-2">
                                     <label class="text-sm font-bold text-snow/70">نام شرکت / برند</label>
-                                    <input type="text" wire:model="company" placeholder="مثلاً: فروشگاه نمونه"
-                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors">
+                                    <input
+                                        type="text"
+                                        wire:model="company"
+                                        placeholder="مثلاً: فروشگاه نمونه"
+                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors"
+                                    >
                                     @error('company') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="space-y-2 md:col-span-2">
                                     <label class="text-sm font-bold text-snow/70">سمت شما</label>
-                                    <input type="text" wire:model="role"
+                                    <input
+                                        type="text"
+                                        wire:model="role"
                                         placeholder="مثلاً: مدیرعامل، مسئول بازاریابی، صاحب کسب‌وکار"
-                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors">
+                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors"
+                                    >
                                     @error('role') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -331,10 +447,16 @@ new #[Layout('components.layouts.app')]
                             <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                                 @foreach ($serviceOptions as $value => $label)
                                     <label class="cursor-pointer">
-                                        <input type="radio" name="service" value="{{ $value }}" wire:model="service"
-                                            class="hidden peer">
+                                        <input
+                                            type="radio"
+                                            name="service"
+                                            value="{{ $value }}"
+                                            wire:model="service"
+                                            class="hidden peer"
+                                        >
                                         <div
-                                            class="text-center text-xs md:text-sm border border-white/10 rounded-xl px-3 py-4 text-snow/60 peer-checked:border-sky peer-checked:bg-sky/10 peer-checked:text-sky transition-all">
+                                            class="text-center text-xs md:text-sm border border-white/10 rounded-xl px-3 py-4 text-snow/60 peer-checked:border-sky peer-checked:bg-sky/10 peer-checked:text-sky transition-all"
+                                        >
                                             {{ $label }}
                                         </div>
                                     </label>
@@ -349,10 +471,16 @@ new #[Layout('components.layouts.app')]
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     @foreach ($websiteOptions as $value => $label)
                                         <label class="cursor-pointer">
-                                            <input type="radio" name="currentWebsite" value="{{ $value }}"
-                                                wire:model="currentWebsite" class="hidden peer">
+                                            <input
+                                                type="radio"
+                                                name="currentWebsite"
+                                                value="{{ $value }}"
+                                                wire:model="currentWebsite"
+                                                class="hidden peer"
+                                            >
                                             <div
-                                                class="text-center text-sm border border-white/10 rounded-xl px-4 py-4 text-snow/60 peer-checked:border-sky peer-checked:bg-sky/10 peer-checked:text-sky transition-all">
+                                                class="text-center text-sm border border-white/10 rounded-xl px-4 py-4 text-snow/60 peer-checked:border-sky peer-checked:bg-sky/10 peer-checked:text-sky transition-all"
+                                            >
                                                 {{ $label }}
                                             </div>
                                         </label>
@@ -364,13 +492,17 @@ new #[Layout('components.layouts.app')]
 
                             <div class="space-y-2">
                                 <label class="text-sm font-bold text-snow/70">آدرس وبسایت فعلی</label>
-                                <input type="url" wire:model="currentWebsiteUrl" placeholder="https://example.com" dir="ltr"
-                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors">
+                                <input
+                                    type="url"
+                                    wire:model="currentWebsiteUrl"
+                                    placeholder="https://example.com"
+                                    dir="ltr"
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors"
+                                >
                                 <p class="text-xs text-snow/40 leading-6">
                                     اگر سایت داری، آدرسش را بنویس تا بررسی اولیه انجام دهیم.
                                 </p>
-                                @error('currentWebsiteUrl') <span class="text-xs text-red-400">{{ $message }}</span>
-                                @enderror
+                                @error('currentWebsiteUrl') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                             </div>
                         </div>
                     @endif
@@ -387,35 +519,46 @@ new #[Layout('components.layouts.app')]
 
                             <div class="space-y-2">
                                 <label class="text-sm font-bold text-snow/70">درباره کسب‌وکارت بنویس *</label>
-                                <textarea wire:model="businessDescription" rows="5"
+                                <textarea
+                                    wire:model="businessDescription"
+                                    rows="5"
                                     placeholder="کسب‌وکارت چه کاری انجام می‌دهد؟ مشتریان اصلی‌ات چه کسانی هستند؟ الان چه چالشی داری؟"
-                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors resize-none leading-7"></textarea>
-                                @error('businessDescription') <span class="text-xs text-red-400">{{ $message }}</span>
-                                @enderror
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors resize-none leading-7"
+                                ></textarea>
+                                @error('businessDescription') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="space-y-2">
                                 <label class="text-sm font-bold text-snow/70">هدف اصلی پروژه چیست؟ *</label>
-                                <textarea wire:model="projectGoals" rows="4"
+                                <textarea
+                                    wire:model="projectGoals"
+                                    rows="4"
                                     placeholder="مثلاً: فروش بیشتر، گرفتن لید باکیفیت، برندسازی، بهبود رتبه گوگل، معرفی خدمات جدید"
-                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors resize-none leading-7"></textarea>
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors resize-none leading-7"
+                                ></textarea>
                                 @error('projectGoals') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="grid md:grid-cols-2 gap-6">
                                 <div class="space-y-2">
                                     <label class="text-sm font-bold text-snow/70">رقبا یا نمونه‌های مورد علاقه</label>
-                                    <textarea wire:model="competitors" rows="4"
+                                    <textarea
+                                        wire:model="competitors"
+                                        rows="4"
                                         placeholder="اگر سایت یا برندی هست که دوست داری، نام یا لینک آن را بنویس."
-                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors resize-none leading-7"></textarea>
+                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors resize-none leading-7"
+                                    ></textarea>
                                     @error('competitors') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="space-y-2">
                                     <label class="text-sm font-bold text-snow/70">محتوا، لوگو یا فایل‌های موجود</label>
-                                    <textarea wire:model="references" rows="4"
+                                    <textarea
+                                        wire:model="references"
+                                        rows="4"
                                         placeholder="آیا لوگو، بریف، تصاویر یا محتوای آماده داری؟ توضیح بده."
-                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors resize-none leading-7"></textarea>
+                                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors resize-none leading-7"
+                                    ></textarea>
                                     @error('references') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -426,10 +569,16 @@ new #[Layout('components.layouts.app')]
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     @foreach ($timelineOptions as $value => $label)
                                         <label class="cursor-pointer">
-                                            <input type="radio" name="timeline" value="{{ $value }}" wire:model="timeline"
-                                                class="hidden peer">
+                                            <input
+                                                type="radio"
+                                                name="timeline"
+                                                value="{{ $value }}"
+                                                wire:model="timeline"
+                                                class="hidden peer"
+                                            >
                                             <div
-                                                class="text-center text-xs md:text-sm border border-white/10 rounded-xl px-3 py-4 text-snow/60 peer-checked:border-sky peer-checked:bg-sky/10 peer-checked:text-sky transition-all">
+                                                class="text-center text-xs md:text-sm border border-white/10 rounded-xl px-3 py-4 text-snow/60 peer-checked:border-sky peer-checked:bg-sky/10 peer-checked:text-sky transition-all"
+                                            >
                                                 {{ $label }}
                                             </div>
                                         </label>
@@ -445,10 +594,16 @@ new #[Layout('components.layouts.app')]
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                     @foreach ($budgetOptions as $value => $label)
                                         <label class="cursor-pointer">
-                                            <input type="radio" name="budget" value="{{ $value }}" wire:model="budget"
-                                                class="hidden peer">
+                                            <input
+                                                type="radio"
+                                                name="budget"
+                                                value="{{ $value }}"
+                                                wire:model="budget"
+                                                class="hidden peer"
+                                            >
                                             <div
-                                                class="text-center text-xs md:text-sm border border-white/10 rounded-xl px-3 py-4 text-snow/60 peer-checked:border-sky peer-checked:bg-sky/10 peer-checked:text-sky transition-all">
+                                                class="text-center text-xs md:text-sm border border-white/10 rounded-xl px-3 py-4 text-snow/60 peer-checked:border-sky peer-checked:bg-sky/10 peer-checked:text-sky transition-all"
+                                            >
                                                 {{ $label }}
                                             </div>
                                         </label>
@@ -460,10 +615,65 @@ new #[Layout('components.layouts.app')]
 
                             <div class="space-y-2 pt-4 border-t border-white/10">
                                 <label class="text-sm font-bold text-snow/70">توضیحات تکمیلی</label>
-                                <textarea wire:model="message" rows="4"
+                                <textarea
+                                    wire:model="message"
+                                    rows="4"
                                     placeholder="هر نکته دیگری که فکر می‌کنی مهم است را اینجا بنویس..."
-                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors resize-none leading-7"></textarea>
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors resize-none leading-7"
+                                ></textarea>
                                 @error('message') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="space-y-3 pt-4 border-t border-white/10">
+                                <label class="text-sm font-bold text-snow/70">آپلود فایل‌های پروژه</label>
+                                <p class="text-xs text-snow/45 leading-6">
+                                    می‌توانی لوگو، بریف، تصاویر مرجع، فایل محتوایی یا压缩包 مرتبط را آپلود کنی. حداکثر حجم هر فایل: ۱۰ مگابایت.
+                                </p>
+
+                                <input
+                                    type="file"
+                                    wire:model="attachments"
+                                    multiple
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm file:ml-3 file:rounded-lg file:border-0 file:bg-sky/15 file:px-3 file:py-2 file:text-sky file:font-bold"
+                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.zip,.rar"
+                                >
+
+                                @error('attachments') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
+                                @error('attachments.*') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
+
+                                @if (! empty($attachments))
+                                    <div class="grid gap-3">
+                                        @foreach ($attachments as $index => $file)
+                                            <div wire:key="attachment-{{ $index }}" class="rounded-xl border border-white/10 bg-white/5 p-3 flex items-center justify-between gap-3">
+                                                <div class="flex items-center gap-3 min-w-0">
+                                                    @if (str_starts_with((string) $file->getMimeType(), 'image/'))
+                                                        <img src="{{ $file->temporaryUrl() }}" alt="{{ $file->getClientOriginalName() }}" class="w-12 h-12 rounded-lg object-cover border border-white/10">
+                                                    @else
+                                                        <div class="w-12 h-12 rounded-lg grid place-items-center bg-sky/10 text-sky border border-sky/20">
+                                                            <i class="fa-solid fa-file"></i>
+                                                        </div>
+                                                    @endif
+
+                                                    <div class="min-w-0">
+                                                        <div class="text-sm font-bold truncate">{{ $file->getClientOriginalName() }}</div>
+                                                        <div class="text-xs text-snow/45" dir="ltr">
+                                                            {{ round($file->getSize() / 1024, 1) }} KB
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    wire:click="removeAttachment({{ $index }})"
+                                                    class="text-rose-300 hover:text-rose-200 transition-colors"
+                                                    title="حذف فایل"
+                                                >
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     @endif
@@ -509,8 +719,7 @@ new #[Layout('components.layouts.app')]
                                         <p><span class="text-snow/45">خدمت:</span> {{ $serviceLabel }}</p>
                                         <p><span class="text-snow/45">وبسایت فعلی:</span> {{ $websiteLabel }}</p>
                                         @if ($currentWebsiteUrl)
-                                            <p><span class="text-snow/45">آدرس سایت:</span> <span
-                                                    dir="ltr">{{ $currentWebsiteUrl }}</span></p>
+                                            <p><span class="text-snow/45">آدرس سایت:</span> <span dir="ltr">{{ $currentWebsiteUrl }}</span></p>
                                         @endif
                                     </div>
                                 </div>
@@ -552,23 +761,31 @@ new #[Layout('components.layouts.app')]
                                                 {{ $message }}
                                             </p>
                                         @endif
+
+                                        @if (! empty($attachments))
+                                            <p>
+                                                <span class="text-snow/45">فایل‌های ضمیمه:</span><br>
+                                                <span dir="ltr">{{ collect($attachments)->pluck('originalName')->implode('، ') }}</span>
+                                            </p>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
 
-                            <div
-                                class="rounded-2xl bg-amber-400/10 border border-amber-400/20 p-5 text-sm text-amber-200 leading-7">
-                                بعد از ارسال، یک <strong>کد پیگیری</strong> دریافت می‌کنی. با آن کد می‌توانی وضعیت درخواستت
-                                را در سایت دنبال کنی.
+                            <div class="rounded-2xl bg-amber-400/10 border border-amber-400/20 p-5 text-sm text-amber-200 leading-7">
+                                بعد از ارسال، یک <strong>کد پیگیری</strong> دریافت می‌کنی. با آن کد می‌توانی وضعیت درخواستت را در سایت دنبال کنی.
                             </div>
                         </div>
                     @endif
 
                     {{-- Actions --}}
-                    <div
-                        class="flex flex-col-reverse md:flex-row items-stretch md:items-center justify-between gap-4 pt-6 border-t border-white/10">
-                        <button type="button" wire:click="prevStep" @disabled($step === 1)
-                            class="btn btn-primary {{ $step === 1 ? 'opacity-40 pointer-events-none' : '' }}">
+                    <div class="flex flex-col-reverse md:flex-row items-stretch md:items-center justify-between gap-4 pt-6 border-t border-white/10">
+                        <button
+                            type="button"
+                            wire:click="prevStep"
+                            @disabled($step === 1)
+                            class="btn btn-primary {{ $step === 1 ? 'opacity-40 pointer-events-none' : '' }}"
+                        >
                             <i class="fa-solid fa-arrow-right"></i>
                             مرحله قبل
                         </button>

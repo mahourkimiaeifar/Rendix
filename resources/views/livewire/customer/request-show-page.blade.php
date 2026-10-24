@@ -5,7 +5,8 @@ use App\Support\Jalali;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('components.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')]
+    class extends Component {
     public string $code = '';
 
     public function mount(string $code): void
@@ -22,10 +23,10 @@ new #[Layout('components.layouts.app')] class extends Component {
             ->where('tracking_code', $this->code)
             ->where(function ($query) use ($user) {
                 $query->where('user_id', $user->id)
-                      ->orWhere(function ($q) use ($user) {
-                          $q->whereNull('user_id')
+                    ->orWhere(function ($q) use ($user) {
+                        $q->whereNull('user_id')
                             ->where('email', $user->email);
-                      });
+                    });
             })
             ->first();
     }
@@ -36,7 +37,7 @@ new #[Layout('components.layouts.app')] class extends Component {
 @php
     $request = $this->request();
 
-    if (! $request) {
+    if (!$request) {
         abort(404);
     }
 
@@ -102,7 +103,8 @@ new #[Layout('components.layouts.app')] class extends Component {
     <section class="pt-36 pb-24 px-5 md:px-10">
         <div class="max-w-5xl mx-auto">
 
-            <a href="{{ route('customer.requests') }}" class="inline-flex items-center gap-2 text-sm font-bold text-snow/55 hover:text-sky transition-colors mb-8">
+            <a href="{{ route('customer.requests') }}"
+                class="inline-flex items-center gap-2 text-sm font-bold text-snow/55 hover:text-sky transition-colors mb-8">
                 <i class="fa-solid fa-arrow-right"></i>
                 بازگشت به درخواست‌ها
             </a>
@@ -157,7 +159,8 @@ new #[Layout('components.layouts.app')] class extends Component {
                             <p><span class="text-snow/45">خدمت:</span> {{ $request->service }}</p>
                             <p><span class="text-snow/45">وبسایت فعلی:</span> {{ $request->websiteStatusLabel() }}</p>
                             @if ($request->current_website_url)
-                                <p><span class="text-snow/45">آدرس سایت:</span> <span dir="ltr">{{ $request->current_website_url }}</span></p>
+                                <p><span class="text-snow/45">آدرس سایت:</span> <span
+                                        dir="ltr">{{ $request->current_website_url }}</span></p>
                             @endif
                             <p><span class="text-snow/45">زمان‌بندی:</span> {{ $request->timelineLabel() }}</p>
                             <p><span class="text-snow/45">بودجه:</span> {{ $request->budgetLabel() }}</p>
@@ -206,10 +209,50 @@ new #[Layout('components.layouts.app')] class extends Component {
                     </div>
                 </div>
 
+                @if ($request->attachments->isNotEmpty())
+                    <div class="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-5">
+                        <h3 class="text-lg font-black">فایل‌های ضمیمه شده</h3>
+
+                        <div class="grid md:grid-cols-2 gap-4">
+                            @foreach ($request->attachments as $attachment)
+                                <div
+                                    class="rounded-xl border border-white/10 bg-white/5 p-4 flex items-center justify-between gap-4">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        @if ($attachment->isImage())
+                                            <img src="{{ $attachment->url() }}" alt="{{ $attachment->original_name }}"
+                                                class="w-14 h-14 rounded-xl object-cover border border-white/10">
+                                        @else
+                                            <div
+                                                class="w-14 h-14 rounded-xl grid place-items-center bg-sky/10 text-sky border border-sky/20 text-xl">
+                                                <i class="fa-solid fa-file"></i>
+                                            </div>
+                                        @endif
+
+                                        <div class="min-w-0">
+                                            <strong
+                                                class="block text-sm font-black truncate">{{ $attachment->original_name }}</strong>
+                                            <small class="block text-xs text-snow/45 mt-1" dir="ltr">
+                                                {{ $attachment->humanSize() }}
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <a href="{{ route('customer.attachments.download', [$request->tracking_code, $attachment->id]) }}"
+                                        class="btn btn-primary !px-4 !py-2 text-xs" target="_blank" rel="noopener noreferrer">
+                                        <i class="fa-solid fa-download"></i>
+                                        دانلود
+                                    </a>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 <div class="space-y-5">
                     <h2 class="text-xl font-black">مسیر درخواست</h2>
 
-                    <div class="relative space-y-4 before:absolute before:top-4 before:bottom-4 before:right-[19px] before:w-px before:bg-white/10">
+                    <div
+                        class="relative space-y-4 before:absolute before:top-4 before:bottom-4 before:right-[19px] before:w-px before:bg-white/10">
                         @foreach ($statusFlow as $status => $item)
                             @php
                                 $index = array_search($status, array_keys($statusFlow), true);
@@ -220,8 +263,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                             <div class="relative flex gap-4 items-start">
                                 <div
                                     class="w-10 h-10 rounded-full flex items-center justify-center border z-10
-                                    {{ $isCurrent ? 'border-sky bg-sky/15 text-sky' : ($isDone ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300' : 'border-white/10 bg-white/5 text-snow/35') }}"
-                                >
+                                        {{ $isCurrent ? 'border-sky bg-sky/15 text-sky' : ($isDone ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300' : 'border-white/10 bg-white/5 text-snow/35') }}">
                                     @if ($isDone)
                                         <i class="fa-solid fa-check text-sm"></i>
                                     @else
@@ -229,20 +271,22 @@ new #[Layout('components.layouts.app')] class extends Component {
                                     @endif
                                 </div>
 
-                                <div class="flex-1 rounded-2xl border p-4 transition-all
-                                    {{ $isCurrent ? 'border-sky/35 bg-sky/10' : ($isDone ? 'border-emerald-400/20 bg-emerald-400/5' : 'border-white/10 bg-white/5') }}"
-                                >
+                                <div
+                                    class="flex-1 rounded-2xl border p-4 transition-all
+                                        {{ $isCurrent ? 'border-sky/35 bg-sky/10' : ($isDone ? 'border-emerald-400/20 bg-emerald-400/5' : 'border-white/10 bg-white/5') }}">
                                     <div class="flex items-center justify-between gap-3">
                                         <h3 class="text-sm md:text-base font-black">
                                             {{ $item['title'] }}
                                         </h3>
 
                                         @if ($isCurrent)
-                                            <span class="text-[11px] font-black text-sky bg-sky/10 border border-sky/20 rounded-full px-3 py-1">
+                                            <span
+                                                class="text-[11px] font-black text-sky bg-sky/10 border border-sky/20 rounded-full px-3 py-1">
                                                 فعلی
                                             </span>
                                         @elseif ($isDone)
-                                            <span class="text-[11px] font-black text-emerald-300 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-3 py-1">
+                                            <span
+                                                class="text-[11px] font-black text-emerald-300 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-3 py-1">
                                                 انجام شد
                                             </span>
                                         @endif
@@ -282,7 +326,8 @@ new #[Layout('components.layouts.app')] class extends Component {
                     <h3 class="text-lg font-black">ارتباط سریع</h3>
 
                     <p class="text-sm text-snow/55 leading-7">
-                        اگر سوال داری یا می‌خواهی جزئیات درخواستت را تغییر بدهی، از این راه‌ها با {{ $siteName }} در تماس باش.
+                        اگر سوال داری یا می‌خواهی جزئیات درخواستت را تغییر بدهی، از این راه‌ها با {{ $siteName }} در
+                        تماس باش.
                     </p>
 
                     <div class="flex flex-wrap gap-3">

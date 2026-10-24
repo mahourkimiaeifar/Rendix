@@ -1,8 +1,13 @@
 <?php
 
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
+use App\Models\ProjectRequest;
+use App\Models\ProjectRequestAttachment;
+use Illuminate\Support\Facades\Storage;
 
 Volt::route('/', 'pages.home-page')->name('home');
 Volt::route('/about', 'pages.about-page')->name('about');
@@ -24,6 +29,69 @@ Volt::route('/category/{slug}', 'pages.category-page')->name('category');
 Volt::route('/tag/{slug}', 'pages.tag-page')->name('tag');
 
 Volt::route('/page/{slug}', 'pages.page-page')->name('page');
+
+Volt::route('/register', 'auth.register-page')->name('register');
+Volt::route('/login', 'auth.login-page')->name('login');
+
+Volt::route('/forgot-password', 'auth.forgot-password-page')->name('password.request');
+Volt::route('/reset-password/{token}', 'auth.reset-password-page')->name('password.reset');
+
+Route::post('/logout', function () {
+    Auth::logout();
+
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+
+    return redirect()->route('home');
+})->middleware('auth')->name('logout');
+
+Route::middleware('auth')->group(function () {
+    Volt::route('/dashboard', 'customer.dashboard-page')->name('dashboard');
+    Volt::route('/dashboard/requests', 'customer.requests-page')->name('customer.requests');
+    Volt::route('/dashboard/requests/{code}', 'customer.request-show-page')->name('customer.requests.show');
+    Volt::route('/dashboard/profile', 'customer.profile-page')->name('customer.profile');
+
+    Route::get('/email/verify', function () {
+        return view('auth.verify-email');
+    })->name('verification.notice');
+
+    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $request->fulfill();
+
+        return redirect()->route('dashboard');
+    })->middleware(['signed'])->name('verification.verify');
+
+    Route::post('/email/verification-notification', function (Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+
+        return back()->with('status', 'verification-link-sent');
+    })->middleware(['throttle:6,1'])->name('verification.send');
+
+    Route::get('/dashboard/requests/{code}/attachments/{attachment}', function (string $code, ProjectRequestAttachment $attachment) {
+        $user = auth()->user();
+
+        $request = ProjectRequest::query()
+            ->where('tracking_code', trim($code))
+            ->where(function ($query) use ($user) {
+                $query->where('user_id', $user->id)
+                    ->orWhere(function ($q) use ($user) {
+                        $q->whereNull('user_id')
+                            ->where('email', $user->email);
+                    });
+            })
+            ->first();
+
+        if (!$request || $attachment->project_request_id !== $request->id) {
+            abort(404);
+        }
+
+        if (!Storage::disk('public')->exists($attachment->path)) {
+            abort(404);
+        }
+
+        return Storage::disk('public')->download($attachment->path, $attachment->original_name);
+    })->name('customer.attachments.download');
+});
 
 Volt::route('/register', 'auth.register-page')->name('register');
 Volt::route('/login', 'auth.login-page')->name('login');
@@ -198,6 +266,14 @@ Route::prefix(config('admin.prefix', 'admin'))
                     200
                 )->header('Content-Type', 'text/html; charset=UTF-8');
             })->name('diagnostics');
+
+            Route::get('/project-requests/attachments/{attachment}', function (ProjectRequestAttachment $attachment) {
+                if (!Storage::disk('public')->exists($attachment->path)) {
+                    abort(404);
+                }
+
+                return Storage::disk('public')->download($attachment->path, $attachment->original_name);
+            })->name('project-requests.attachments.download');
 
             Volt::route('/posts', 'admin.posts.index-page')->name('posts.index');
             Volt::route('/posts/form', 'admin.posts.form-page')->name('posts.form');

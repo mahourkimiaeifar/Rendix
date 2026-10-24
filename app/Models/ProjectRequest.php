@@ -65,6 +65,11 @@ class ProjectRequest extends Model
         return $this->hasMany(ProjectRequestNote::class);
     }
 
+    public function attachments()
+    {
+        return $this->hasMany(ProjectRequestAttachment::class);
+    }
+
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderByDesc('created_at');
@@ -109,8 +114,8 @@ class ProjectRequest extends Model
     {
         return [
             'under_10' => 'زیر ۱۰ میلیون تومان',
-            '10_25' => '۱۰ تا ۵ میلیون تومان',
-            '25_50' => '۲۵ تا ۵۰ میلیون تومان',
+            '10_25' => '۱۰ تا ۲۵ میلیون تومان',
+            '25_50' => '۲۵ تا ۰ میلیون تومان',
             '50_100' => '۵۰ تا ۱۰۰ میلیون تومان',
             'over_100' => 'بالای ۱۰۰ میلیون تومان',
             'not_sure' => 'مطمئن نیستم',

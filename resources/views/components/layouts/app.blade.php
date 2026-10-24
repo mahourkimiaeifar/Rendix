@@ -164,11 +164,15 @@
 
         $seo ??= [];
 
-        $seo['title'] ??= $siteName . ' — طراحی وبسایت، سئو و دیجیتال مارکتینگ';
+        $seo['title'] ??= isset($title) && $title
+            ? $title . ' | ' . $siteName
+            : $siteName . ' — طراحی وبسایت، سئو و دیجیتال مارکتینگ';
+
         $seo['description'] ??= setting(
             'site.tagline',
             'رندیکس؛ طراحی وبسایت، سئو و دیجیتال مارکتینگ با تمرکز بر رشد واقعی کسب‌وکار.'
         );
+
         $seo['keywords'] ??= setting('seo.keywords', '');
 
         $canonical ??= url()->current();
@@ -179,26 +183,29 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $seo['title'] }}</title>
-    <meta name="description" content="{{ $seo['description'] }}">
-    <meta name="keywords" content="{{ $seo['keywords'] }}">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="{{ $canonical }}">
+    <title>@yield('rendix.title', $seo['title'])</title>
 
-    <meta property="og:type" content="website">
+    <meta name="description" content="@yield('rendix.description', $seo['description'])">
+    <meta name="keywords" content="@yield('rendix.keywords', $seo['keywords'])">
+    <meta name="robots" content="@yield('rendix.robots', 'index, follow')">
+
+    <link rel="canonical" href="@yield('rendix.canonical', $canonical)">
+
+    <meta property="og:type" content="@yield('rendix.type', 'website')">
     <meta property="og:site_name" content="{{ $siteName }}">
-    <meta property="og:title" content="{{ $seo['title'] }}">
-    <meta property="og:description" content="{{ $seo['description'] }}">
-    <meta property="og:url" content="{{ $canonical }}">
-    <meta property="og:image" content="{{ $ogImage }}">
-    <meta property="og:image:alt" content="تصویر پیش‌فرض رندیکس">
+    <meta property="og:title" content="@yield('rendix.title', $seo['title'])">
+    <meta property="og:description" content="@yield('rendix.description', $seo['description'])">
+    <meta property="og:url" content="@yield('rendix.canonical', $canonical)">
+    <meta property="og:image" content="@yield('rendix.image', $ogImage)">
+    <meta property="og:image:alt" content="{{ $siteName }}">
     <meta property="og:locale" content="fa_IR">
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ $seo['title'] }}">
-    <meta name="twitter:description" content="{{ $seo['description'] }}">
-    <meta name="twitter:image" content="{{ $ogImage }}">
+    <meta name="twitter:title" content="@yield('rendix.title', $seo['title'])">
+    <meta name="twitter:description" content="@yield('rendix.description', $seo['description'])">
+    <meta name="twitter:image" content="@yield('rendix.image', $ogImage)">
     <meta name="color-scheme" content="dark light">
 
     <link rel="icon" type="image/png" href="{{ $favicon }}">
@@ -212,7 +219,6 @@
                 var key = 'rendix-theme';
                 var theme = null;
 
-                // 1) اول localStorage
                 try {
                     var stored = localStorage.getItem(key);
                     if (stored === 'light' || stored === 'dark') {
@@ -220,7 +226,6 @@
                     }
                 } catch (e) { }
 
-                // 2) بعد cookie
                 if (!theme) {
                     var cookie = document.cookie
                         .split('; ')
@@ -234,7 +239,6 @@
                     }
                 }
 
-                // 3) پیش‌فرض
                 if (theme !== 'light' && theme !== 'dark') {
                     theme = 'dark';
                 }
@@ -245,7 +249,6 @@
                 root.classList.toggle('dark', theme !== 'light');
                 root.setAttribute('data-theme', theme);
 
-                // cookie را هم هماهنگ کن تا دفعات بعد سرور درست رندر کند
                 document.cookie = key + '=' + theme + '; path=/; max-age=31536000; SameSite=Lax';
             } catch (error) {
                 document.documentElement.classList.add('dark');
@@ -256,6 +259,8 @@
 
     @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
+
+    @stack('rendix.head')
 </head>
 
 <body class="antialiased">

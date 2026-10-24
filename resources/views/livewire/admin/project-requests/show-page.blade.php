@@ -3,12 +3,14 @@
 use App\Models\ProjectRequest;
 use App\Models\ProjectRequestNote;
 use App\Services\ActivityLogger;
+use App\Support\ProjectRequestNotifier;
 use App\Support\Jalali;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Volt\Component;
 
-new #[Layout('components.layouts.admin')] class extends Component {
+new #[Layout('components.layouts.admin')]
+    class extends Component {
     #[Url(as: 'id')]
     public ?int $requestId = null;
 
@@ -28,7 +30,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
     public function request(): ?ProjectRequest
     {
-        if (! $this->requestId) {
+        if (!$this->requestId) {
             return null;
         }
 
@@ -41,7 +43,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
     {
         $request = $this->request();
 
-        if (! $request) {
+        if (!$request) {
             return;
         }
 
@@ -52,11 +54,11 @@ new #[Layout('components.layouts.admin')] class extends Component {
     {
         $request = $this->request();
 
-        if (! $request) {
+        if (!$request) {
             return;
         }
 
-        if (! array_key_exists($value, ProjectRequest::statusOptions())) {
+        if (!array_key_exists($value, ProjectRequest::statusOptions())) {
             $this->status = (string) $request->status;
 
             return;
@@ -72,12 +74,14 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
         if (
             in_array($value, ['reviewing', 'meeting_scheduled', 'proposal_sent', 'in_progress', 'delivered'], true)
-            && ! $request->responded_at
+            && !$request->responded_at
         ) {
             $request->responded_at = now();
         }
 
         $request->save();
+
+        ProjectRequestNotifier::statusChanged($request, $oldStatus);
 
         ActivityLogger::log('project_request.status_updated', $request, [
             'from' => $oldStatus,
@@ -94,7 +98,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
     {
         $request = $this->request();
 
-        if (! $request) {
+        if (!$request) {
             return;
         }
 
@@ -131,7 +135,7 @@ new #[Layout('components.layouts.admin')] class extends Component {
     $request = $this->request();
 @endphp
 
-@if (! $request)
+@if (!$request)
     <div class="admin-page">
         <div class="admin-panel rx-lead-empty">
             <i class="fa-solid fa-satellite-dish"></i>
@@ -160,19 +164,16 @@ new #[Layout('components.layouts.admin')] class extends Component {
                         {{ $request->tracking_code }}
                     </span>
 
-                    <span class="admin-badge {{ $request->status === 'delivered' ? 'status-won' : ($request->status === 'cancelled' || $request->status === 'archived' ? 'status-archived' : 'priority-normal') }}">
+                    <span
+                        class="admin-badge {{ $request->status === 'delivered' ? 'status-won' : ($request->status === 'cancelled' || $request->status === 'archived' ? 'status-archived' : 'priority-normal') }}">
                         {{ $request->statusLabel() }}
                     </span>
                 </p>
             </div>
 
             <div class="admin-header-actions">
-                <a
-                    href="{{ route('request-project.show', $request->tracking_code) }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="admin-btn admin-btn-ghost"
-                >
+                <a href="{{ route('request-project.show', $request->tracking_code) }}" target="_blank"
+                    rel="noopener noreferrer" class="admin-btn admin-btn-ghost">
                     <i class="fa-solid fa-up-right-from-square"></i>
                     صفحه پیگیری
                 </a>
@@ -310,6 +311,51 @@ new #[Layout('components.layouts.admin')] class extends Component {
                     </div>
                 </div>
 
+                @if ($request->attachments->isNotEmpty())
+                    <div class="admin-panel">
+                        <div class="admin-panel-header">
+                            <h2>فایل‌های ضمیمه</h2>
+                            <span class="admin-count">
+                                {{ Jalali::toPersianDigits(number_format($request->attachments->count())) }} فایل
+                            </span>
+                        </div>
+
+                        <div class="rx-edit-form-inner">
+                            <div class="grid md:grid-cols-2 gap-4">
+                                @foreach ($request->attachments as $attachment)
+                                    <div
+                                        class="rounded-2xl border border-white/10 bg-white/5 p-4 flex items-center justify-between gap-4">
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            @if ($attachment->isImage())
+                                                <img src="{{ $attachment->url() }}" alt="{{ $attachment->original_name }}"
+                                                    class="w-14 h-14 rounded-xl object-cover border border-white/10">
+                                            @else
+                                                <div
+                                                    class="w-14 h-14 rounded-xl grid place-items-center bg-sky/10 text-sky border border-sky/20 text-xl">
+                                                    <i class="fa-solid fa-file"></i>
+                                                </div>
+                                            @endif
+
+                                            <div class="min-w-0">
+                                                <strong
+                                                    class="block text-sm font-black truncate">{{ $attachment->original_name }}</strong>
+                                                <small class="block text-xs text-snow/45 mt-1" dir="ltr">
+                                                    {{ $attachment->humanSize() }}
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        <a href="{{ route('admin.project-requests.attachments.download', $attachment->id) }}"
+                                            class="admin-btn admin-btn-ghost !px-3 !py-2" target="_blank" rel="noopener noreferrer">
+                                            <i class="fa-solid fa-download"></i>
+                                        </a>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="admin-panel">
                     <div class="admin-panel-header">
                         <h2>یادداشت‌های داخلی</h2>
@@ -323,12 +369,8 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
                         <div class="admin-field">
                             <label class="admin-label">متن یادداشت</label>
-                            <textarea
-                                wire:model.live="note"
-                                class="admin-input rx-textarea"
-                                rows="3"
-                                placeholder="مثلاً: تماس گرفتم، گفت هفته آینده بودجه را قطعی می‌کند."
-                            ></textarea>
+                            <textarea wire:model.live="note" class="admin-input rx-textarea" rows="3"
+                                placeholder="مثلاً: تماس گرفتم، گفت هفته آینده بودجه را قطعی می‌کند."></textarea>
 
                             @error('note')
                                 <p class="admin-error">
@@ -384,12 +426,8 @@ new #[Layout('components.layouts.admin')] class extends Component {
                     </div>
 
                     <div class="rx-side-pills">
-                        <x-admin.choice-pills
-                            name="status"
-                            label=""
-                            :options="\App\Models\ProjectRequest::statusOptions()"
-                            :value="$status"
-                        />
+                        <x-admin.choice-pills name="status" label="" :options="\App\Models\ProjectRequest::statusOptions()"
+                            :value="$status" />
                     </div>
                 </div>
 
@@ -422,7 +460,8 @@ new #[Layout('components.layouts.admin')] class extends Component {
 
                     <div class="rx-metadata-block">
                         <span>Query / UTM</span>
-                        <pre dir="ltr">{{ json_encode($request->metadata['query'] ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) }}</pre>
+                        <pre
+                            dir="ltr">{{ json_encode($request->metadata['query'] ?? [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) }}</pre>
                     </div>
                 </div>
             </aside>

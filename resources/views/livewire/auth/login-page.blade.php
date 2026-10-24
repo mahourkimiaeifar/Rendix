@@ -5,7 +5,8 @@ use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('components.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')]
+    class extends Component {
     public string $email = '';
     public string $password = '';
     public bool $remember = false;
@@ -34,7 +35,7 @@ new #[Layout('components.layouts.app')] class extends Component {
             'password' => $validated['password'],
         ];
 
-        if (! Auth::attempt($credentials, $this->remember)) {
+        if (!Auth::attempt($credentials, $this->remember)) {
             RateLimiter::hit($key, 60 * 5);
 
             $this->addError('email', 'ایمیل یا رمز عبور درست نیست.');
@@ -64,6 +65,18 @@ new #[Layout('components.layouts.app')] class extends Component {
 
 @php
     $siteName = setting('site.name', 'رندیکس');
+    $pageTitle = 'ورود به حساب کاربری | ' . $siteName;
+    $pageDescription = 'وارد حساب کاربری رندیکس شوید تا درخواست‌ها، کدهای پیگیری و وضعیت پروژه‌هایتان را دنبال کنید.';
+    $canonical = route('login');
+@endphp
+
+@section('rendix.title', $pageTitle)
+@section('rendix.description', $pageDescription)
+@section('rendix.canonical', $canonical)
+@section('rendix.type', 'WebPage')
+
+@php
+    $siteName = setting('site.name', 'رندیکس');
 @endphp
 
 <div>
@@ -89,31 +102,23 @@ new #[Layout('components.layouts.app')] class extends Component {
             <form wire:submit="login" class="glass p-7 md:p-9 space-y-6">
                 <div class="space-y-2">
                     <label class="text-sm font-bold text-snow/70">ایمیل *</label>
-                    <input
-                        type="email"
-                        wire:model="email"
-                        placeholder="you@example.com"
-                        dir="ltr"
+                    <input type="email" wire:model="email" placeholder="you@example.com" dir="ltr"
                         class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors"
-                        required
-                    >
+                        required>
                     @error('email') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="space-y-2">
                     <label class="text-sm font-bold text-snow/70">رمز عبور *</label>
-                    <input
-                        type="password"
-                        wire:model="password"
-                        placeholder="••••••••"
+                    <input type="password" wire:model="password" placeholder="••••••••"
                         class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors"
-                        required
-                    >
+                        required>
                     @error('password') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                 </div>
 
                 <label class="flex items-center gap-3 text-sm text-snow/65 cursor-pointer">
-                    <input type="checkbox" wire:model="remember" class="rounded border-white/20 bg-white/5 text-sky focus:ring-sky/30">
+                    <input type="checkbox" wire:model="remember"
+                        class="rounded border-white/20 bg-white/5 text-sky focus:ring-sky/30">
                     <span>مرا به خاطر بسپار</span>
                 </label>
 

@@ -4,10 +4,12 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('components.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')]
+    class extends Component {
     public string $name = '';
     public string $email = '';
     public string $phone = '';
@@ -47,6 +49,10 @@ new #[Layout('components.layouts.app')] class extends Component {
 
         Auth::login($user);
 
+        if (!$user->hasVerifiedEmail()) {
+            $user->sendEmailVerificationNotification();
+        }
+
         request()->session()->regenerate();
 
         return redirect()->route('dashboard');
@@ -75,70 +81,49 @@ new #[Layout('components.layouts.app')] class extends Component {
                 </h1>
 
                 <p class="text-snow/60 leading-8">
-                    با ساخت حساب کاربری، می‌توانی درخواست‌های پروژه، کدهای پیگیری و وضعیت همکاری‌هایت را در داشبورد شخصی دنبال کنی.
+                    با ساخت حساب کاربری، می‌توانی درخواست‌های پروژه، کدهای پیگیری و وضعیت همکاری‌هایت را در داشبورد شخصی
+                    دنبال کنی.
                 </p>
             </div>
 
             <form wire:submit="register" class="glass p-7 md:p-9 space-y-6">
                 <div class="space-y-2">
                     <label class="text-sm font-bold text-snow/70">نام و نام خانوادگی *</label>
-                    <input
-                        type="text"
-                        wire:model="name"
-                        placeholder="مثلاً: علی رضایی"
+                    <input type="text" wire:model="name" placeholder="مثلاً: علی رضایی"
                         class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors"
-                        required
-                    >
+                        required>
                     @error('name') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="space-y-2">
                     <label class="text-sm font-bold text-snow/70">ایمیل *</label>
-                    <input
-                        type="email"
-                        wire:model="email"
-                        placeholder="you@example.com"
-                        dir="ltr"
+                    <input type="email" wire:model="email" placeholder="you@example.com" dir="ltr"
                         class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors"
-                        required
-                    >
+                        required>
                     @error('email') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="space-y-2">
                     <label class="text-sm font-bold text-snow/70">شماره تماس</label>
-                    <input
-                        type="tel"
-                        wire:model="phone"
-                        placeholder="09xxxxxxxxx"
-                        dir="ltr"
-                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors"
-                    >
+                    <input type="tel" wire:model="phone" placeholder="09xxxxxxxxx" dir="ltr"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors">
                     @error('phone') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="grid md:grid-cols-2 gap-6">
                     <div class="space-y-2">
                         <label class="text-sm font-bold text-snow/70">رمز عبور *</label>
-                        <input
-                            type="password"
-                            wire:model="password"
-                            placeholder="حداقل ۸ کاراکتر"
+                        <input type="password" wire:model="password" placeholder="حداقل ۸ کاراکتر"
                             class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors"
-                            required
-                        >
+                            required>
                         @error('password') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="space-y-2">
                         <label class="text-sm font-bold text-snow/70">تکرار رمز عبور *</label>
-                        <input
-                            type="password"
-                            wire:model="password_confirmation"
-                            placeholder="تکرار رمز عبور"
+                        <input type="password" wire:model="password_confirmation" placeholder="تکرار رمز عبور"
                             class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm placeholder:text-snow/25 focus:outline-none focus:border-sky/60 transition-colors"
-                            required
-                        >
+                            required>
                     </div>
                 </div>
 
