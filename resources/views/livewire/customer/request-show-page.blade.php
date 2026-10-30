@@ -5,8 +5,7 @@ use App\Support\Jalali;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('components.layouts.app')]
-    class extends Component {
+new #[Layout('components.layouts.customer')] class extends Component {
     public string $code = '';
 
     public function mount(string $code): void
@@ -19,14 +18,12 @@ new #[Layout('components.layouts.app')]
         $user = auth()->user();
 
         return ProjectRequest::query()
-            ->with('notes.user')
             ->where('tracking_code', $this->code)
             ->where(function ($query) use ($user) {
                 $query->where('user_id', $user->id)
-                    ->orWhere(function ($q) use ($user) {
-                        $q->whereNull('user_id')
-                            ->where('email', $user->email);
-                    });
+                      ->orWhere(function ($q) use ($user) {
+                          $q->whereNull('user_id')->where('email', $user->email);
+                      });
             })
             ->first();
     }
@@ -37,314 +34,193 @@ new #[Layout('components.layouts.app')]
 @php
     $request = $this->request();
 
-    if (!$request) {
+    if (! $request) {
         abort(404);
     }
 
     $siteName = setting('site.name', 'رندیکس');
-    $telegram = setting('social.telegram', 'https://t.me/RendixDMServices');
+    $telegram = setting('social.telegram');
 
-    $statusFlow = [
-        'new' => [
-            'title' => 'درخواست دریافت شد',
-            'desc' => 'درخواست شما در سیستم ثبت شد و در صف بررسی قرار دارد.',
-            'icon' => 'fa-solid fa-inbox',
-        ],
-        'reviewing' => [
-            'title' => 'در حال بررسی',
-            'desc' => 'تیم ' . $siteName . ' در حال بررسی جزئیات پروژه و نیازهای شماست.',
-            'icon' => 'fa-solid fa-magnifying-glass-chart',
-        ],
-        'meeting_scheduled' => [
-            'title' => 'جلسه تعیین شد',
-            'desc' => 'برای گفتگوی دقیق‌تر، زمان جلسه تعیین شده است.',
-            'icon' => 'fa-solid fa-calendar-check',
-        ],
-        'proposal_sent' => [
-            'title' => 'پیشنهاد ارسال شد',
-            'desc' => 'پیشنهاد همکاری، بازه زمانی و برآورد هزینه برای شما ارسال شده است.',
-            'icon' => 'fa-solid fa-file-signature',
-        ],
-        'waiting_client' => [
-            'title' => 'در انتظار تأیید شما',
-            'desc' => 'منتظر نظر نهایی شما برای شروع همکاری هستیم.',
-            'icon' => 'fa-solid fa-hourglass-half',
-        ],
-        'in_progress' => [
-            'title' => 'در حال اجرا',
-            'desc' => 'پروژه وارد فاز اجرا شده و تیم ' . $siteName . ' در حال کار است.',
-            'icon' => 'fa-solid fa-rocket',
-        ],
-        'delivered' => [
-            'title' => 'تحویل شد',
-            'desc' => 'پروژه تحویل داده شد. پشتیبانی و مراحل بعدی طبق توافق انجام می‌شود.',
-            'icon' => 'fa-solid fa-circle-check',
-        ],
-        'cancelled' => [
-            'title' => 'لغو شد',
-            'desc' => 'این درخواست لغو شده است. برای شروع مجدد با ما تماس بگیرید.',
-            'icon' => 'fa-solid fa-xmark',
-        ],
-        'archived' => [
-            'title' => 'بایگانی شد',
-            'desc' => 'این درخواست بایگانی شده است.',
-            'icon' => 'fa-solid fa-box-archive',
-        ],
+    $flow = [
+        'new' => ['title' => 'درخواست دریافت شد', 'icon' => 'fa-solid fa-inbox'],
+        'reviewing' => ['title' => 'در حال بررسی', 'icon' => 'fa-solid fa-magnifying-glass-chart'],
+        'meeting_scheduled' => ['title' => 'جلسه تعیین شد', 'icon' => 'fa-solid fa-calendar-check'],
+        'proposal_sent' => ['title' => 'پیشنهاد ارسال شد', 'icon' => 'fa-solid fa-file-signature'],
+        'waiting_client' => ['title' => 'در انتظار تأیید شما', 'icon' => 'fa-solid fa-hourglass-half'],
+        'in_progress' => ['title' => 'در حال اجرا', 'icon' => 'fa-solid fa-rocket'],
+        'delivered' => ['title' => 'تحویل شد', 'icon' => 'fa-solid fa-circle-check'],
     ];
 
-    $currentIndex = array_search($request->status, array_keys($statusFlow), true);
+    $cancelled = in_array($request->status, ['cancelled', 'archived'], true);
+
+    $currentIndex = array_search($request->status, array_keys($flow), true);
+
+    if ($cancelled) {
+        $currentIndex = count($flow);
+    }
 
     if ($currentIndex === false) {
         $currentIndex = 0;
     }
 @endphp
 
-<div>
-    <section class="pt-36 pb-24 px-5 md:px-10">
-        <div class="max-w-5xl mx-auto">
+@section('cust.title', 'جزئیات درخواست')
+@section('cust.icon', 'fa-solid fa-file-lines')
 
-            <a href="{{ route('customer.requests') }}"
-                class="inline-flex items-center gap-2 text-sm font-bold text-snow/55 hover:text-sky transition-colors mb-8">
-                <i class="fa-solid fa-arrow-right"></i>
-                بازگشت به درخواست‌ها
-            </a>
+<div class="rx-cust-card" style="padding:20px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <span class="rx-cust-code" dir="ltr" style="font-size:16px;">{{ $request->tracking_code }}</span>
+        <button
+            type="button"
+            class="btn btn-ghost btn-sm btn-icon"
+            title="کپی کد"
+            onclick="navigator.clipboard.writeText('{{ $request->tracking_code }}').then(function(){ window.rxToast && rxToast({ type:'success', message:'کد پیگیری کپی شد.' }); })"
+        >
+            <i class="fa-solid fa-copy"></i>
+        </button>
+        <span class="st-pill {{ $request->status === 'delivered' ? 'st-done' : ($cancelled ? 'st-cancel' : (in_array($request->status, ['waiting_client', 'proposal_sent']) ? 'st-wait' : ($request->status === 'new' ? 'st-new' : 'st-progress'))) }}">
+            {{ $request->statusLabel() }}
+        </span>
+    </div>
 
-            <div class="glass p-7 md:p-10 space-y-8">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-                    <div class="space-y-3">
-                        <div class="badge">
-                            <span class="badge-dot"></span>
-                            جزئیات درخواست پروژه
-                        </div>
+    <span class="rx-cust-muted">ثبت: {{ Jalali::date($request->created_at) }}</span>
+</div>
 
-                        <h1 class="text-3xl md:text-5xl font-black leading-[1.25]">
-                            {{ $request->service }}
-                        </h1>
+<div class="rx-cust-card" style="padding:20px;">
+    <h2 style="margin:0 0 16px;font-size:16px;font-weight:950;">مسیر درخواست</h2>
 
-                        <p class="text-sm text-snow/55 leading-7">
-                            کد پیگیری:
-                            <strong dir="ltr" class="text-sky">{{ $request->tracking_code }}</strong>
-                        </p>
-                    </div>
+    <div class="rx-cust-timeline">
+        @foreach ($flow as $key => $step)
+            @php
+                $index = array_search($key, array_keys($flow), true);
+                $isDone = $index < $currentIndex;
+                $isCurrent = $index === $currentIndex && ! $cancelled;
+            @endphp
 
-                    <div class="rounded-2xl bg-white/5 border border-white/10 px-5 py-4 text-center min-w-44">
-                        <div class="text-xs text-snow/45 font-bold mb-1">وضعیت فعلی</div>
-                        <div class="text-lg font-black text-sky">
-                            {{ $request->statusLabel() }}
-                        </div>
-                    </div>
-                </div>
+            <div class="rx-tl-item {{ $isDone ? 'done' : ($isCurrent ? 'current' : '') }}">
+                <span class="rx-tl-dot">
+                    <i class="{{ $isDone ? 'fa-solid fa-check' : $step['icon'] }}"></i>
+                </span>
 
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="rounded-2xl bg-white/5 border border-white/10 p-5 space-y-3">
-                        <h3 class="text-base font-black text-sky">اطلاعات ثبت‌شده</h3>
-
-                        <div class="space-y-2 text-sm leading-7">
-                            <p><span class="text-snow/45">نام:</span> {{ $request->name }}</p>
-                            <p><span class="text-snow/45">تلفن:</span> <span dir="ltr">{{ $request->phone }}</span></p>
-                            @if ($request->email)
-                                <p><span class="text-snow/45">ایمیل:</span> <span dir="ltr">{{ $request->email }}</span></p>
-                            @endif
-                            @if ($request->company)
-                                <p><span class="text-snow/45">شرکت:</span> {{ $request->company }}</p>
-                            @endif
-                            <p><span class="text-snow/45">تاریخ ثبت:</span> {{ Jalali::date($request->created_at) }}</p>
-                        </div>
-                    </div>
-
-                    <div class="rounded-2xl bg-white/5 border border-white/10 p-5 space-y-3">
-                        <h3 class="text-base font-black text-sky">مشخصات پروژه</h3>
-
-                        <div class="space-y-2 text-sm leading-7">
-                            <p><span class="text-snow/45">خدمت:</span> {{ $request->service }}</p>
-                            <p><span class="text-snow/45">وبسایت فعلی:</span> {{ $request->websiteStatusLabel() }}</p>
-                            @if ($request->current_website_url)
-                                <p><span class="text-snow/45">آدرس سایت:</span> <span
-                                        dir="ltr">{{ $request->current_website_url }}</span></p>
-                            @endif
-                            <p><span class="text-snow/45">زمان‌بندی:</span> {{ $request->timelineLabel() }}</p>
-                            <p><span class="text-snow/45">بودجه:</span> {{ $request->budgetLabel() }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-5">
-                    <h3 class="text-lg font-black">توضیحات شما</h3>
-
-                    <div class="space-y-4 text-sm leading-8 text-snow/70">
-                        @if ($request->business_description)
-                            <div>
-                                <div class="text-snow/45 font-bold mb-1">درباره کسب‌وکار</div>
-                                <div class="whitespace-pre-line">{{ $request->business_description }}</div>
-                            </div>
+                <div class="rx-tl-body">
+                    <strong>{{ $step['title'] }}</strong>
+                    <span>
+                        @if ($isDone)
+                            انجام شد
+                        @elseif ($isCurrent)
+                            مرحله فعلی
+                        @else
+                            در انتظار
                         @endif
-
-                        @if ($request->project_goals)
-                            <div>
-                                <div class="text-snow/45 font-bold mb-1">هدف پروژه</div>
-                                <div class="whitespace-pre-line">{{ $request->project_goals }}</div>
-                            </div>
-                        @endif
-
-                        @if ($request->competitors)
-                            <div>
-                                <div class="text-snow/45 font-bold mb-1">رقبا / نمونه‌ها</div>
-                                <div class="whitespace-pre-line">{{ $request->competitors }}</div>
-                            </div>
-                        @endif
-
-                        @if ($request->references)
-                            <div>
-                                <div class="text-snow/45 font-bold mb-1">فایل‌ها / محتوا</div>
-                                <div class="whitespace-pre-line">{{ $request->references }}</div>
-                            </div>
-                        @endif
-
-                        @if ($request->message)
-                            <div>
-                                <div class="text-snow/45 font-bold mb-1">توضیحات تکمیلی</div>
-                                <div class="whitespace-pre-line">{{ $request->message }}</div>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                @if ($request->attachments->isNotEmpty())
-                    <div class="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-5">
-                        <h3 class="text-lg font-black">فایل‌های ضمیمه شده</h3>
-
-                        <div class="grid md:grid-cols-2 gap-4">
-                            @foreach ($request->attachments as $attachment)
-                                <div
-                                    class="rounded-xl border border-white/10 bg-white/5 p-4 flex items-center justify-between gap-4">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        @if ($attachment->isImage())
-                                            <img src="{{ $attachment->url() }}" alt="{{ $attachment->original_name }}"
-                                                class="w-14 h-14 rounded-xl object-cover border border-white/10">
-                                        @else
-                                            <div
-                                                class="w-14 h-14 rounded-xl grid place-items-center bg-sky/10 text-sky border border-sky/20 text-xl">
-                                                <i class="fa-solid fa-file"></i>
-                                            </div>
-                                        @endif
-
-                                        <div class="min-w-0">
-                                            <strong
-                                                class="block text-sm font-black truncate">{{ $attachment->original_name }}</strong>
-                                            <small class="block text-xs text-snow/45 mt-1" dir="ltr">
-                                                {{ $attachment->humanSize() }}
-                                            </small>
-                                        </div>
-                                    </div>
-
-                                    <a href="{{ route('customer.attachments.download', [$request->tracking_code, $attachment->id]) }}"
-                                        class="btn btn-primary !px-4 !py-2 text-xs" target="_blank" rel="noopener noreferrer">
-                                        <i class="fa-solid fa-download"></i>
-                                        دانلود
-                                    </a>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                <div class="space-y-5">
-                    <h2 class="text-xl font-black">مسیر درخواست</h2>
-
-                    <div
-                        class="relative space-y-4 before:absolute before:top-4 before:bottom-4 before:right-[19px] before:w-px before:bg-white/10">
-                        @foreach ($statusFlow as $status => $item)
-                            @php
-                                $index = array_search($status, array_keys($statusFlow), true);
-                                $isDone = $index < $currentIndex;
-                                $isCurrent = $index === $currentIndex;
-                            @endphp
-
-                            <div class="relative flex gap-4 items-start">
-                                <div
-                                    class="w-10 h-10 rounded-full flex items-center justify-center border z-10
-                                        {{ $isCurrent ? 'border-sky bg-sky/15 text-sky' : ($isDone ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300' : 'border-white/10 bg-white/5 text-snow/35') }}">
-                                    @if ($isDone)
-                                        <i class="fa-solid fa-check text-sm"></i>
-                                    @else
-                                        <i class="{{ $item['icon'] }} text-sm"></i>
-                                    @endif
-                                </div>
-
-                                <div
-                                    class="flex-1 rounded-2xl border p-4 transition-all
-                                        {{ $isCurrent ? 'border-sky/35 bg-sky/10' : ($isDone ? 'border-emerald-400/20 bg-emerald-400/5' : 'border-white/10 bg-white/5') }}">
-                                    <div class="flex items-center justify-between gap-3">
-                                        <h3 class="text-sm md:text-base font-black">
-                                            {{ $item['title'] }}
-                                        </h3>
-
-                                        @if ($isCurrent)
-                                            <span
-                                                class="text-[11px] font-black text-sky bg-sky/10 border border-sky/20 rounded-full px-3 py-1">
-                                                فعلی
-                                            </span>
-                                        @elseif ($isDone)
-                                            <span
-                                                class="text-[11px] font-black text-emerald-300 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-3 py-1">
-                                                انجام شد
-                                            </span>
-                                        @endif
-                                    </div>
-
-                                    <p class="mt-2 text-xs md:text-sm text-snow/55 leading-7">
-                                        {{ $item['desc'] }}
-                                    </p>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-
-                @if ($request->notes->isNotEmpty())
-                    <div class="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-5">
-                        <h3 class="text-lg font-black">یادداشت‌های تیم</h3>
-
-                        <div class="space-y-3">
-                            @foreach ($request->notes->sortByDesc('created_at') as $note)
-                                <div class="rounded-xl border border-white/10 bg-white/5 p-4 space-y-2">
-                                    <div class="flex items-center justify-between gap-3 text-xs">
-                                        <strong class="text-snow/75">{{ $note->user?->name ?? 'تیم ' . $siteName }}</strong>
-                                        <span class="text-snow/45">{{ Jalali::date($note->created_at) }}</span>
-                                    </div>
-
-                                    <p class="text-sm text-snow/65 leading-7 whitespace-pre-line">
-                                        {{ $note->body }}
-                                    </p>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                <div class="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-5">
-                    <h3 class="text-lg font-black">ارتباط سریع</h3>
-
-                    <p class="text-sm text-snow/55 leading-7">
-                        اگر سوال داری یا می‌خواهی جزئیات درخواستت را تغییر بدهی، از این راه‌ها با {{ $siteName }} در
-                        تماس باش.
-                    </p>
-
-                    <div class="flex flex-wrap gap-3">
-                        @if ($telegram)
-                            <a href="{{ $telegram }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-                                <i class="fa-brands fa-telegram"></i>
-                                تلگرام
-                            </a>
-                        @endif
-
-                        <a href="{{ route('contact') }}" class="btn btn-primary">
-                            <i class="fa-solid fa-paper-plane"></i>
-                            فرم تماس
-                        </a>
-                    </div>
+                    </span>
                 </div>
             </div>
-        </div>
-    </section>
+        @endforeach
+
+        @if ($cancelled)
+            <div class="rx-tl-item cancel">
+                <span class="rx-tl-dot"><i class="fa-solid fa-xmark"></i></span>
+                <div class="rx-tl-body">
+                    <strong>{{ $request->statusLabel() }}</strong>
+                    <span>برای شروع دوباره با ما در تماس باش.</span>
+                </div>
+            </div>
+        @endif
+    </div>
 </div>
+
+<div class="rx-cust-card" style="padding:20px;display:grid;gap:14px;">
+    <h2 style="margin:0;font-size:16px;font-weight:950;">اطلاعات ثبت‌شده</h2>
+
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;" class="rx-show-grid">
+        <div class="rx-cust-row" style="padding:12px 14px;">
+            <span class="rx-cust-muted">خدمت</span>
+            <strong style="font-size:13px;">{{ $request->service }}</strong>
+        </div>
+        <div class="rx-cust-row" style="padding:12px 14px;">
+            <span class="rx-cust-muted">بودجه</span>
+            <strong style="font-size:13px;">{{ $request->budgetLabel() }}</strong>
+        </div>
+        <div class="rx-cust-row" style="padding:12px 14px;">
+            <span class="rx-cust-muted">زمان‌بندی</span>
+            <strong style="font-size:13px;">{{ $request->timelineLabel() }}</strong>
+        </div>
+        <div class="rx-cust-row" style="padding:12px 14px;">
+            <span class="rx-cust-muted">وبسایت فعلی</span>
+            <strong style="font-size:13px;">{{ $request->websiteStatusLabel() }}</strong>
+        </div>
+    </div>
+
+    @if ($request->business_description)
+        <div>
+            <div class="rx-cust-muted" style="margin-bottom:6px;">درباره کسب‌وکار</div>
+            <div class="rx-cust-row" style="padding:12px 14px;align-items:flex-start;">
+                <p style="margin:0;font-size:13px;line-height:2;white-space:pre-line;">{{ $request->business_description }}</p>
+            </div>
+        </div>
+    @endif
+
+    @if ($request->project_goals)
+        <div>
+            <div class="rx-cust-muted" style="margin-bottom:6px;">هدف پروژه</div>
+            <div class="rx-cust-row" style="padding:12px 14px;align-items:flex-start;">
+                <p style="margin:0;font-size:13px;line-height:2;white-space:pre-line;">{{ $request->project_goals }}</p>
+            </div>
+        </div>
+    @endif
+</div>
+
+@if ($request->attachments->isNotEmpty())
+    <div class="rx-cust-card" style="padding:20px;display:grid;gap:10px;">
+        <h2 style="margin:0;font-size:16px;font-weight:950;">فایل‌های ضمیمه</h2>
+
+        @foreach ($request->attachments as $attachment)
+            <div class="rx-cust-row">
+                <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                    <div class="icon-tile" style="width:40px;height:40px;font-size:15px;">
+                        <i class="{{ $attachment->isImage() ? 'fa-solid fa-image' : 'fa-solid fa-file' }}"></i>
+                    </div>
+                    <div style="min-width:0;">
+                        <strong style="display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $attachment->original_name }}</strong>
+                        <span class="rx-cust-muted" dir="ltr">{{ $attachment->humanSize() }}</span>
+                    </div>
+                </div>
+
+                <a
+                    href="{{ route('customer.attachments.download', [$request->tracking_code, $attachment->id]) }}"
+                    class="btn btn-ghost btn-sm"
+                >
+                    <i class="fa-solid fa-download"></i>
+                    <span>دانلود</span>
+                </a>
+            </div>
+        @endforeach
+    </div>
+@endif
+
+<div class="rx-cust-card" style="padding:20px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;">
+    <div>
+        <strong style="font-size:14px;">سوال یا تغییری داری؟</strong>
+        <p class="rx-cust-muted" style="margin:4px 0 0;">تیم {{ $siteName }} معمولاً ظرف ۲۴ ساعت پاسخ می‌دهد.</p>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        @if ($telegram)
+            <a href="{{ $telegram }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+                <i class="fa-brands fa-telegram"></i>
+                <span>تلگرام</span>
+            </a>
+        @endif
+
+        <a href="{{ route('contact') }}" class="btn btn-ghost btn-sm" wire:navigate>
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>فرم تماس</span>
+        </a>
+    </div>
+</div>
+
+<style>
+    @media (max-width: 760px) {
+        .rx-show-grid { grid-template-columns: 1fr !important; }
+    }
+</style>

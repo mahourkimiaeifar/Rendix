@@ -1,172 +1,94 @@
-<aside id="admin-sidebar" class="admin-sidebar">
+@php
+    $siteName = setting('site.name', 'رندیکس');
+    $logo = setting_url('brand.logo', asset('images/favicon.png?v=6'));
+
+    $groups = [
+        [
+            'title' => 'مدیریت',
+            'items' => [
+                ['route' => 'admin.dashboard', 'match' => 'admin.dashboard', 'label' => 'داشبورد', 'icon' => 'fa-solid fa-gauge-high'],
+                ['route' => 'admin.leads.index', 'match' => 'admin.leads.*', 'label' => 'سرنخ‌ها', 'icon' => 'fa-solid fa-users'],
+                ['route' => 'admin.project-requests.index', 'match' => 'admin.project-requests.*', 'label' => 'درخواست‌های پروژه', 'icon' => 'fa-solid fa-clipboard-list'],
+            ],
+        ],
+        [
+            'title' => 'محتوا و بلاگ',
+            'items' => [
+                ['route' => 'admin.posts.index', 'match' => 'admin.posts.*', 'label' => 'مقالات', 'icon' => 'fa-solid fa-newspaper'],
+                ['route' => 'admin.categories', 'match' => 'admin.categories', 'label' => 'دسته‌بندی‌ها', 'icon' => 'fa-solid fa-folder-tree'],
+                ['route' => 'admin.tags', 'match' => 'admin.tags', 'label' => 'تگ‌ها', 'icon' => 'fa-solid fa-tags'],
+                ['route' => 'admin.pages', 'match' => 'admin.pages', 'label' => 'صفحات اختصاصی', 'icon' => 'fa-solid fa-file-lines'],
+            ],
+        ],
+        [
+            'title' => 'سایت',
+            'items' => [
+                ['route' => 'admin.services.index', 'match' => 'admin.services.*', 'label' => 'خدمات', 'icon' => 'fa-solid fa-layer-group'],
+                ['route' => 'admin.projects.index', 'match' => 'admin.projects.*', 'label' => 'نمونه‌کارها', 'icon' => 'fa-solid fa-diagram-project'],
+                ['route' => 'admin.testimonials', 'match' => 'admin.testimonials', 'label' => 'نظرات مشتریان', 'icon' => 'fa-solid fa-quote-right'],
+                ['route' => 'admin.faqs', 'match' => 'admin.faqs', 'label' => 'سوالات متداول', 'icon' => 'fa-solid fa-circle-question'],
+                ['route' => 'admin.settings', 'match' => 'admin.settings', 'label' => 'تنظیمات سایت', 'icon' => 'fa-solid fa-sliders'],
+            ],
+        ],
+        [
+            'title' => 'سیستم',
+            'items' => [
+                ['route' => 'admin.profile', 'match' => 'admin.profile', 'label' => 'پروفایل', 'icon' => 'fa-solid fa-user-gear'],
+                ['route' => 'admin.diagnostics', 'match' => 'admin.diagnostics', 'label' => 'تشخیص سایت', 'icon' => 'fa-solid fa-stethoscope'],
+            ],
+        ],
+    ];
+
+    $maintenanceEnabled = false;
+
+    try {
+        $maintenanceEnabled = \App\Support\MaintenanceMode::enabled();
+    } catch (\Throwable $e) {
+        $maintenanceEnabled = false;
+    }
+@endphp
+
+<aside class="admin-sidebar">
     <div class="admin-sidebar-brand">
-        <img src="/images/favicon.png?v=6" alt="رندیکس">
+        <img src="{{ $logo }}" alt="{{ $siteName }}">
         <div>
-            <strong>رندیکس</strong>
+            <strong>{{ $siteName }}</strong>
             <span>پنل مدیریت</span>
         </div>
     </div>
 
-    <nav class="admin-nav">
-        <div class="admin-nav-group">
-            <p class="admin-nav-title">فضای کاری</p>
+    <nav class="admin-nav" aria-label="ناوبری پنل">
+        @foreach ($groups as $group)
+            <div class="admin-nav-group">
+                <p class="admin-nav-title">{{ $group['title'] }}</p>
 
-            <a href="{{ route('admin.dashboard') }}"
-                class="admin-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                <i class="fa-solid fa-gauge-high"></i>
-                <span>داشبورد</span>
-            </a>
-        </div>
-
-        <div class="admin-nav-group">
-            <p class="admin-nav-title">مشتری‌ها</p>
-
-            <a href="{{ route('admin.leads.index') }}"
-                class="admin-nav-item {{ request()->routeIs('admin.leads.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-user-clock"></i>
-                <span>سرنخ‌ها</span>
-            </a>
-
-            <a href="{{ route('admin.project-requests.index') }}"
-                class="admin-nav-item {{ request()->routeIs('admin.project-requests.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-clipboard-list"></i>
-                <span>درخواست‌های پروژه</span>
-            </a>
-        </div>
-        <div class="admin-nav-group">
-            <p class="admin-nav-title">محتوا و اعتماد</p>
-
-            <a href="{{ route('admin.projects.index') }}"
-                class="admin-nav-item {{ request()->routeIs('admin.projects.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-briefcase"></i>
-                <span>نمونه‌کارها</span>
-            </a>
-
-            <a href="{{ route('admin.testimonials') }}"
-                class="admin-nav-item {{ request()->routeIs('admin.testimonials') ? 'active' : '' }}">
-                <i class="fa-solid fa-quote-right"></i>
-                <span>نظرات مشتریان</span>
-            </a>
-
-            <a href="{{ route('admin.faqs') }}"
-                class="admin-nav-item {{ request()->routeIs('admin.faqs') ? 'active' : '' }}">
-                <i class="fa-solid fa-circle-question"></i>
-                <span>سوالات متداول</span>
-            </a>
-        </div>
-
-        <div class="admin-nav-group">
-            <p class="admin-nav-title">محتوا و بلاگ</p>
-
-            <a href="{{ route('admin.posts.index') }}"
-                class="admin-nav-item {{ request()->routeIs('admin.posts.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-newspaper"></i>
-                <span>مقالات</span>
-            </a>
-
-            <a href="{{ route('admin.categories') }}"
-                class="admin-nav-item {{ request()->routeIs('admin.categories') ? 'active' : '' }}">
-                <i class="fa-solid fa-folder-tree"></i>
-                <span>دسته‌بندی‌ها</span>
-            </a>
-
-            <a href="{{ route('admin.tags') }}"
-                class="admin-nav-item {{ request()->routeIs('admin.tags') ? 'active' : '' }}">
-                <i class="fa-solid fa-tags"></i>
-                <span>تگ‌ها</span>
-            </a>
-
-            <a href="{{ route('admin.pages') }}"
-                class="admin-nav-item {{ request()->routeIs('admin.pages') ? 'active' : '' }}">
-                <i class="fa-solid fa-file-lines"></i>
-                <span>صفحات اختصاصی</span>
-            </a>
-        </div>
-        
-        <div class="admin-nav-group">
-            <p class="admin-nav-title">محتوا</p>
-
-            <a href="#" class="admin-nav-item disabled">
-                <i class="fa-solid fa-briefcase"></i>
-                <span>خدمات</span>
-                <em>به‌زودی</em>
-            </a>
-
-            <a href="#" class="admin-nav-item disabled">
-                <i class="fa-solid fa-diagram-project"></i>
-                <span>نمونه‌کارها</span>
-                <em>به‌زودی</em>
-            </a>
-
-            <a href="#" class="admin-nav-item disabled">
-                <i class="fa-solid fa-quote-right"></i>
-                <span>نظرات مشتریان</span>
-                <em>به‌زودی</em>
-            </a>
-
-            <a href="#" class="admin-nav-item disabled">
-                <i class="fa-solid fa-circle-question"></i>
-                <span>سوالات متداول</span>
-                <em>به‌زودی</em>
-            </a>
-        </div>
-
-        <div class="admin-nav-group">
-            <p class="admin-nav-title">سیستم</p>
-
-            <a href="{{ route('admin.diagnostics') }}"
-                class="admin-nav-item {{ request()->routeIs('admin.diagnostics') ? 'active' : '' }}">
-                <i class="fa-solid fa-stethoscope"></i>
-                <span>تشخیص سایت</span>
-            </a>
-
-            <a href="#" class="admin-nav-item disabled">
-                <i class="fa-solid fa-sliders"></i>
-                <span>تنظیمات</span>
-                <em>به‌زودی</em>
-            </a>
-
-            <a href="{{ route('admin.profile') }}"
-                class="admin-nav-item {{ request()->routeIs('admin.profile') ? 'active' : '' }}">
-                <i class="fa-solid fa-user-gear"></i>
-                <span>پروفایل و امنیت</span>
-            </a>
-
-            <a href="#" class="admin-nav-item disabled">
-                <i class="fa-solid fa-photo-film"></i>
-                <span>رسانه</span>
-                <em>به‌زودی</em>
-            </a>
-
-            <a href="#" class="admin-nav-item disabled">
-                <i class="fa-solid fa-list-check"></i>
-                <span>فعالیت‌ها</span>
-                <em>به‌زودی</em>
-            </a>
-        </div>
-        <div class="admin-nav-group">
-            <p class="admin-nav-title">مدیریت سایت</p>
-
-            <a href="{{ route('admin.settings') }}"
-                class="admin-nav-item {{ request()->routeIs('admin.settings') ? 'active' : '' }}">
-                <i class="fa-solid fa-sliders"></i>
-                <span>تنظیمات سایت</span>
-            </a>
-
-            <a href="{{ route('admin.services.index') }}"
-                class="admin-nav-item {{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
-                <i class="fa-solid fa-briefcase"></i>
-                <span>خدمات</span>
-            </a>
-        </div>
+                @foreach ($group['items'] as $item)
+                    @if (Route::has($item['route']))
+                        <a
+                            href="{{ route($item['route']) }}"
+                            class="admin-nav-item {{ request()->routeIs($item['match']) ? 'active' : '' }}"
+                        >
+                            <i class="{{ $item['icon'] }}"></i>
+                            <span>{{ $item['label'] }}</span>
+                        </a>
+                    @endif
+                @endforeach
+            </div>
+        @endforeach
     </nav>
 
     <div class="admin-sidebar-footer">
         <div class="admin-mini-card">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <i class="fa-solid fa-satellite-dish"></i>
             <div>
-                <strong>رندیکس اِسپیس</strong>
-                <span>پنل کهکشانی مدیریت رشد</span>
+                <strong>وضعیت سایت</strong>
+                <span>
+                    @if ($maintenanceEnabled)
+                        حالت تعمیرات فعال است
+                    @else
+                        سایت به‌صورت عادی در دسترس است
+                    @endif
+                </span>
             </div>
         </div>
     </div>

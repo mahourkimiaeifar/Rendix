@@ -1,139 +1,180 @@
-<div>
-    <nav id="navbar" class="fixed top-0 inset-x-0 z-50 px-5 md:px-10">
-        <div class="max-w-7xl mx-auto flex items-center justify-between h-[72px]">
+@php
+    $siteName = setting('site.name', 'رندیکس');
+    $logo = setting_url('brand.logo', asset('images/favicon.png?v=6'));
 
-            {{-- لوگو --}}
-            <a href="/" wire:navigate class="flex items-center gap-3 group">
-                <img src="/images/favicon.png?v=6" alt="رندیکس"
-                    class="w-10 h-10 object-contain transition-transform duration-300 group-hover:scale-105">
-                <span class="hidden md:inline text-lg font-black text-[var(--rx-fg)]">
-                    رندیکس
-                </span>
-            </a>
+    $navItems = [
+        ['route' => 'home', 'label' => 'خانه'],
+        ['route' => 'about', 'label' => 'درباره ما'],
+        ['route' => 'services', 'label' => 'خدمات'],
+        ['route' => 'projects', 'label' => 'نمونه‌کارها'],
+        ['route' => 'blog', 'label' => 'بلاگ'],
+        ['route' => 'request-project', 'label' => 'درخواست پروژه'],
+        ['route' => 'contact', 'label' => 'تماس با ما'],
+    ];
 
-            {{-- منوی دسکتاپ --}}
-            <div class="hidden md:flex items-center gap-8">
-                <a href="/" wire:navigate
-                    class="text-sm font-medium transition-colors duration-300 hover:text-[var(--rx-accent-text)] {{ request()->is('/') ? 'text-[var(--rx-accent-text)] font-bold' : 'text-[var(--rx-fg-muted)]' }}">
-                    خانه
+    $visibleNavItems = [];
+
+    foreach ($navItems as $item) {
+        if (Route::has($item['route'])) {
+            $visibleNavItems[] = $item;
+        }
+    }
+
+    $isAdmin = auth()->check()
+        && method_exists(auth()->user(), 'isAdmin')
+        && auth()->user()->isAdmin();
+@endphp
+
+<header
+    id="navbar"
+    class="rx-nav-header"
+    x-data="{ mobileOpen: false }"
+    x-on:keydown.escape.window="mobileOpen = false"
+>
+    <div class="rx-nav-inner">
+        <a href="{{ Route::has('home') ? route('home') : url('/') }}" class="rx-nav-brand" wire:navigate>
+            <img src="{{ $logo }}" alt="{{ $siteName }}">
+            <span>{{ $siteName }}</span>
+        </a>
+
+        <nav class="rx-nav-links" aria-label="ناوبری اصلی">
+            @foreach ($visibleNavItems as $item)
+                @php
+                    $isActive = request()->routeIs($item['route']) || request()->routeIs($item['route'] . '.*');
+                @endphp
+
+                <a
+                    href="{{ route($item['route']) }}"
+                    wire:navigate
+                    class="rx-nav-link {{ $isActive ? 'is-active' : '' }}"
+                >
+                    {{ $item['label'] }}
                 </a>
+            @endforeach
+        </nav>
 
-                <a href="{{ route('services') }}" wire:navigate class="hover:text-sky transition-colors">
-                    خدمات
-                </a>
+        <div class="rx-nav-actions">
+            <button
+                type="button"
+                class="rx-nav-toggle"
+                x-on:click="mobileOpen = !mobileOpen"
+                x-bind:aria-expanded="mobileOpen ? 'true' : 'false'"
+                aria-controls="rx-mobile-nav"
+                aria-label="باز و بسته کردن منو"
+            >
+                <i class="fa-solid fa-bars" x-show="!mobileOpen"></i>
+                <i class="fa-solid fa-xmark" x-show="mobileOpen" x-cloak></i>
+            </button>
 
-                <a href="/about" wire:navigate
-                    class="text-sm font-medium transition-colors duration-300 hover:text-[var(--rx-accent-text)] {{ request()->is('about') ? 'text-[var(--rx-accent-text)] font-bold' : 'text-[var(--rx-fg-muted)]' }}">
-                    درباره ما
-                </a>
-
-                <a href="/contact" wire:navigate
-                    class="text-sm font-medium transition-colors duration-300 hover:text-[var(--rx-accent-text)] {{ request()->is('contact') ? 'text-[var(--rx-accent-text)] font-bold' : 'text-[var(--rx-fg-muted)]' }}">
-                    تماس
-                </a>
-
-                <a href="{{ route('projects') }}">نمونه‌کارها</a>
-
-                <a href="{{ route('request-project') }}" wire:navigate>درخواست پروژه</a>
-
-                @auth
-                    <a href="{{ route('dashboard') }}" wire:navigate class="hover:text-sky transition-colors">
-                        داشبورد من
-                    </a>
-
-                    <form method="POST" action="{{ route('logout') }}" class="inline">
-                        @csrf
-                        <button type="submit"
-                            class="hover:text-sky transition-colors bg-transparent border-0 p-0 font-inherit text-inherit cursor-pointer">
-                            خروج
-                        </button>
-                    </form>
-                @else
-                    <a href="{{ route('login') }}" wire:navigate class="hover:text-sky transition-colors">
-                        ورود
-                    </a>
-
-                    <a href="{{ route('register') }}" wire:navigate class="btn btn-primary !py-2 !px-4 text-sm">
-                        ثبت‌نام
-                    </a>
-                @endauth
-                <x-site.admin-link />
-            </div>
-
-            {{-- اکشن‌ها --}}
-            <div class="flex items-center gap-3">
-
-                {{-- دکمه تم --}}
-                <button type="button" data-theme-toggle class="theme-toggle" aria-label="تغییر تم">
-                    <i class="fa-solid fa-moon"></i>
-                    <i class="fa-solid fa-sun"></i>
-                </button>
-
-                {{-- CTA دسکتاپ --}}
-                <a href="/contact" wire:navigate class="btn btn-primary hidden md:inline-flex !py-2.5 !px-6 !text-sm">
-                    مشاوره رایگان
-                    <i class="fa-solid fa-arrow-left text-xs"></i>
-                </a>
-
-                {{-- منوی موبایل --}}
-                <button type="button" id="mobile-menu-toggle" class="theme-toggle md:hidden !w-11 !h-11"
-                    aria-label="باز و بسته کردن منو">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-            </div>
-        </div>
-
-        {{-- منوی موبایل --}}
-        <div id="mobile-menu" class="hidden md:hidden glass mx-4 mb-4 p-4 space-y-1">
-            <a href="/" wire:navigate
-                class="block py-3 px-4 rounded-xl text-[var(--rx-fg-muted)] hover:text-[var(--rx-accent-text)] hover:bg-[var(--rx-panel)] transition-colors">
-                خانه
-            </a>
-
-            <a href="{{ route('services') }}" wire:navigate class="hover:text-sky transition-colors">
-                خدمات
-            </a>
-
-            <a href="/about" wire:navigate
-                class="block py-3 px-4 rounded-xl text-[var(--rx-fg-muted)] hover:text-[var(--rx-accent-text)] hover:bg-[var(--rx-panel)] transition-colors">
-                درباره ما
-            </a>
-
-            <a href="/contact" wire:navigate
-                class="block py-3 px-4 rounded-xl text-[var(--rx-fg-muted)] hover:text-[var(--rx-accent-text)] hover:bg-[var(--rx-panel)] transition-colors">
-                تماس
-            </a>
-
-            <a href="{{ route('projects') }}">نمونه‌کارها</a>
-
-            <a href="{{ route('request-project') }}" wire:navigate>درخواست پروژه</a>
+            <button type="button" class="theme-toggle" onclick="rxToggleTheme()" aria-label="تغییر تم">
+                <i class="fa-solid fa-moon"></i>
+                <i class="fa-solid fa-sun"></i>
+            </button>
 
             @auth
-                <a href="{{ route('dashboard') }}" wire:navigate class="hover:text-sky transition-colors">
-                    داشبورد من
-                </a>
+                @if (Route::has('dashboard'))
+                    <a href="{{ route('dashboard') }}" class="btn btn-ghost btn-sm rx-hide-mobile" wire:navigate>
+                        <i class="fa-solid fa-gauge-high"></i>
+                        <span>داشبورد</span>
+                    </a>
+                @endif
 
-                <form method="POST" action="{{ route('logout') }}" class="inline">
-                    @csrf
-                    <button type="submit"
-                        class="hover:text-sky transition-colors bg-transparent border-0 p-0 font-inherit text-inherit cursor-pointer">
-                        خروج
-                    </button>
-                </form>
+                @if (Route::has('logout'))
+                    <form method="POST" action="{{ route('logout') }}" class="rx-hide-mobile" style="display:inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span>خروج</span>
+                        </button>
+                    </form>
+                @endif
             @else
-                <a href="{{ route('login') }}" wire:navigate class="hover:text-sky transition-colors">
-                    ورود
-                </a>
+                @if (Route::has('login'))
+                    <a href="{{ route('login') }}" class="btn btn-ghost btn-sm rx-hide-mobile" wire:navigate>
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span>ورود</span>
+                    </a>
+                @endif
 
-                <a href="{{ route('register') }}" wire:navigate class="btn btn-primary !py-2 !px-4 text-sm">
-                    ثبت‌نام
-                </a>
+                @if (Route::has('register'))
+                    <a href="{{ route('register') }}" class="btn btn-primary btn-sm" wire:navigate>
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>ثبت‌نام</span>
+                    </a>
+                @endif
             @endauth
-            <x-site.admin-link />
-            <a href="/contact" wire:navigate class="btn btn-primary w-full mt-3">
-                مشاوره رایگان
-                <i class="fa-solid fa-arrow-left text-xs"></i>
-            </a>
+
+            @if ($isAdmin && Route::has('admin.dashboard'))
+                <a href="{{ route('admin.dashboard') }}" class="rx-nav-admin-link" title="پنل مدیریت">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>پنل مدیریت</span>
+                </a>
+            @endif
         </div>
-    </nav>
-</div>
+    </div>
+
+    <div
+        id="rx-mobile-nav"
+        class="rx-mobile-panel"
+        x-show="mobileOpen"
+        x-cloak
+        x-transition.opacity.duration.180ms
+    >
+        <div class="rx-mobile-inner">
+            @foreach ($visibleNavItems as $item)
+                @php
+                    $isActive = request()->routeIs($item['route']) || request()->routeIs($item['route'] . '.*');
+                @endphp
+
+                <a
+                    href="{{ route($item['route']) }}"
+                    wire:navigate
+                    class="rx-mobile-link {{ $isActive ? 'is-active' : '' }}"
+                    x-on:click="mobileOpen = false"
+                >
+                    {{ $item['label'] }}
+                </a>
+            @endforeach
+
+            @auth
+                @if (Route::has('dashboard'))
+                    <a href="{{ route('dashboard') }}" class="rx-mobile-link" wire:navigate x-on:click="mobileOpen = false">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        <span>داشبورد من</span>
+                    </a>
+                @endif
+
+                @if (Route::has('logout'))
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="rx-mobile-link rx-mobile-form-button">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span>خروج از حساب</span>
+                        </button>
+                    </form>
+                @endif
+            @else
+                @if (Route::has('login'))
+                    <a href="{{ route('login') }}" class="rx-mobile-link" wire:navigate x-on:click="mobileOpen = false">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span>ورود</span>
+                    </a>
+                @endif
+
+                @if (Route::has('register'))
+                    <a href="{{ route('register') }}" class="rx-mobile-link" wire:navigate x-on:click="mobileOpen = false">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>ثبت‌نام</span>
+                    </a>
+                @endif
+            @endauth
+
+            @if ($isAdmin && Route::has('admin.dashboard'))
+                <a href="{{ route('admin.dashboard') }}" class="rx-mobile-link" x-on:click="mobileOpen = false">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>پنل مدیریت</span>
+                </a>
+            @endif
+        </div>
+    </div>
+</header>

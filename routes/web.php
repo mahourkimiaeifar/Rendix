@@ -36,6 +36,37 @@ Volt::route('/login', 'auth.login-page')->name('login');
 Volt::route('/forgot-password', 'auth.forgot-password-page')->name('password.request');
 Volt::route('/reset-password/{token}', 'auth.reset-password-page')->name('password.reset');
 
+Route::post('/newsletter/subscribe', function (\Illuminate\Http\Request $request) {
+    $data = $request->validate([
+        'email' => ['required', 'email', 'max:190'],
+    ], [
+        'email.required' => 'ایمیل را وارد کن.',
+        'email.email' => 'ایمیل معتبر نیست.',
+    ]);
+
+    $email = strtolower(trim($data['email']));
+
+    $subscriber = \App\Models\Subscriber::firstOrNew(['email' => $email]);
+    $subscriber->is_active = true;
+
+    if (!$subscriber->exists) {
+        $subscriber->save();
+    }
+
+    return back()->with('newsletter_status', 'subscribed');
+})->name('newsletter.subscribe');
+
+Route::get('/newsletter/unsubscribe/{token}', function (string $token) {
+    $subscriber = \App\Models\Subscriber::where('token', $token)->first();
+
+    if ($subscriber) {
+        $subscriber->is_active = false;
+        $subscriber->save();
+    }
+
+    return redirect()->route('home')->with('newsletter_status', 'unsubscribed');
+})->name('newsletter.unsubscribe');
+
 Route::post('/logout', function () {
     Auth::logout();
 

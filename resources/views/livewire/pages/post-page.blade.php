@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Post;
-use App\Support\Jalali;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
@@ -11,26 +10,12 @@ new #[Layout('components.layouts.app')] class extends Component {
     public function mount(string $slug): void
     {
         $this->slug = trim($slug);
-
-        $post = $this->post();
-
-        if ($post) {
-            try {
-                $post->increment('views');
-            } catch (\Throwable $e) {
-                //
-            }
-        }
     }
 
     public function post(): ?Post
     {
         try {
-            return Post::query()
-                ->published()
-                ->with(['category', 'author', 'tags'])
-                ->where('slug', $this->slug)
-                ->first();
+            return Post::query()->active()->where('slug', $this->slug)->first();
         } catch (\Throwable $e) {
             return null;
         }
@@ -38,11 +23,17 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public function relatedPosts(?Post $post)
     {
-        if (! $post) {
+        try {
+            return Post::query()
+                ->active()
+                ->where('id', '!=', $post->id)
+                ->when($post->category_id, fn ($q) => $q->where('category_id', $post->category_id))
+                ->ordered()
+                ->limit(3)
+                ->get();
+        } catch (\Throwable $e) {
             return collect();
         }
-
-        return $post->relatedPosts(3);
     }
 };
 
@@ -56,204 +47,157 @@ new #[Layout('components.layouts.app')] class extends Component {
     }
 
     $related = $this->relatedPosts($post);
-
     $siteName = setting('site.name', 'رندیکس');
-    $telegram = setting('social.telegram', 'https://t.me/RendixDMServices');
 
-    $shareUrl = route('blog.show', $post->slug);
-    $shareText = $post->title . ' | ' . $siteName;
+    $image = null;
+    if (method_exists($post, 'coverUrl')) $image = $post->coverUrl();
+    elseif (method_exists($post, 'imageUrl')) $image = $post->imageUrl();
+    elseif (! empty($post->cover_image)) $image = asset('storage/' . $post->cover_image);
+    elseif (! empty($post->image_path)) $image = asset('storage/' . $post->image_path);
 
-    $content = function_exists('render_rich_content')
-        ? render_rich_content((string) $post->content)
-        : nl2br(e($post->content));
+    $catName = null;
+    if (isset($post->category) && is_object($post->category)) $catName = $post->category->name ?? null;
+    elseif (! empty($post->category_name)) $catName = $post->category_name;
+    elseif (! empty($post->category) && is_string($post->category)) $catName = $post->category;
+
+    $tags = method_exists($post, 'tagList') ? $post->tagList() : (property_exists($post, 'tags') && $post->tags ? $post->tags->pluck('name')->all() : []);
+
+    $words = str_word_count(strip_tags((string) ($post->content ?? '')));
+    $reading = max(1, (int) ceil($words / 200));
+
+    $pageTitle = $post->meta_title ?: ($post->title . ' | ' . $siteName);
+    $pageDescription = $post->meta_description ?: ($post->excerpt ?: \Illuminate\Support\Str::limit(strip_tags((string) ($post->content ?? '')), 160));
 @endphp
 
+@section('rendix.title', $pageTitle)
+@section('rendix.description', $pageDescription)
+@section('rendix.canonical', route('blog.show', $post->slug))
+@section('rendix.image', $image ?: setting_url('brand.og_image', setting_url('brand.favicon', asset('images/favicon.png?v=6'))))
+@section('rendix.type', 'article')
+
+@push('rendix.head')
+    <script type="application/ld+json">
+        {!! json_encode([
+            '@context' => 'https://schema.org',
+            '@type' => 'BlogPosting',
+            'headline' => $post->title,
+            'description' => $pageDescription,
+            'image' => $image,
+            'datePublished' => ($post->published_at ?? $post->created_at)?->toIso8601String(),
+            'author' => ['@type' => 'Organization', 'name' => $siteName],
+            'publisher' => ['@type' => 'Organization', 'name' => $siteName],
+            'mainEntityOfPage' => route('blog.show', $post->slug),
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+    </script>
+@endpush
+
 <div>
-    <section class="pt-36 pb-24 px-5 md:px-10">
-        <div class="max-w-5xl mx-auto">
+    <section class="rx-section tight" style="padding-top: 130px;">
+        <div class="rx-container" style="max-width: 980px;">
+            <nav class="rx-breadcrumb-public" aria-label="مسیر صفحه">
+                <a href="{{ route('home') }}" wire:navigate>خانه</a>
+                <i class="fa-solid fa-chevron-left"></i>
+                <a href="{{ route('blog') }}" wire:navigate>بلاگ</a>
+                <i class="fa-solid fa-chevron-left"></i>
+                <strong>{{ \Illuminate\Support\Str::limit($post->title, 40) }}</strong>
+            </nav>
 
-            <a href="{{ route('blog') }}" class="inline-flex items-center gap-2 text-sm font-bold text-snow/55 hover:text-sky transition-colors mb-8">
-                <i class="fa-solid fa-arrow-right"></i>
-                بازگشت به بلاگ
-            </a>
+            @if ($catName)
+                <span class="rx-post-cat large fade-up">{{ $catName }}</span>
+            @endif
 
-            <article class="glass p-7 md:p-10 space-y-8">
-                <header class="space-y-5">
-                    @if ($post->category)
-                        <a
-                            href="{{ route('category', $post->category->slug) }}"
-                            class="inline-flex text-xs font-black text-sky bg-sky/10 border border-sky/20 rounded-full px-4 py-2"
-                        >
-                            {{ $post->category->name }}
-                        </a>
-                    @endif
+            <h1 class="fade-up delay-1" style="margin:10px 0 0;font-size:clamp(28px,4.5vw,46px);font-weight:950;line-height:1.3;">
+                {{ $post->title }}
+            </h1>
 
-                    <h1 class="text-3xl md:text-5xl font-black leading-[1.25]">
-                        {{ $post->title }}
-                    </h1>
-
-                    @if ($post->excerpt)
-                        <p class="text-lg text-snow/65 leading-9">
-                            {{ $post->excerpt }}
-                        </p>
-                    @endif
-
-                    <div class="flex flex-wrap items-center gap-4 text-xs md:text-sm text-snow/45 border-t border-white/10 pt-5">
-                        <span>
-                            <i class="fa-solid fa-calendar-days ml-1"></i>
-                            {{ $post->published_at ? Jalali::date($post->published_at) : '—' }}
-                        </span>
-
-                        <span>
-                            <i class="fa-solid fa-stopwatch ml-1"></i>
-                            {{ Jalali::toPersianDigits((string) $post->readingTime()) }} دقیقه مطالعه
-                        </span>
-
-                        <span>
-                            <i class="fa-solid fa-eye ml-1"></i>
-                            {{ Jalali::toPersianDigits(number_format($post->views)) }} بازدید
-                        </span>
-
-                        @if ($post->author)
-                            <span>
-                                <i class="fa-solid fa-user-pen ml-1"></i>
-                                {{ $post->author->name }}
-                            </span>
-                        @endif
-                    </div>
-                </header>
-
-                @if ($post->image_path)
-                    <div class="rounded-3xl overflow-hidden border border-white/10 bg-white/5">
-                        <img
-                            src="{{ $post->imageUrl() }}"
-                            alt="{{ $post->title }}"
-                            class="w-full aspect-[16/9] object-cover"
-                        >
-                    </div>
+            <div class="rx-post-meta fade-up delay-2" style="margin-top:16px;">
+                <span><i class="fa-regular fa-calendar"></i> {{ \App\Support\Jalali::date($post->published_at ?? $post->created_at) }}</span>
+                <span><i class="fa-regular fa-clock"></i> {{ \App\Support\Jalali::toPersianDigits((string) $reading) }} دقیقه مطالعه</span>
+                @if ($post->views ?? null)
+                    <span><i class="fa-regular fa-eye"></i> {{ \App\Support\Jalali::toPersianDigits(number_format($post->views)) }} بازدید</span>
                 @endif
+            </div>
 
-                <div class="rx-post-content">
-                    {!! $content !!}
+            @if ($image)
+                <div class="rx-project-hero rv" style="margin-top:26px;">
+                    <img src="{{ $image }}" alt="{{ $post->title }}">
                 </div>
+            @endif
 
-                @if ($post->tags->isNotEmpty())
-                    <div class="flex flex-wrap gap-2 border-t border-white/10 pt-6">
-                        @foreach ($post->tags as $tag)
-                            <a
-                                href="{{ route('tag', $tag->slug) }}"
-                                class="text-xs font-bold text-snow/65 bg-white/5 border border-white/10 rounded-full px-3 py-2 hover:text-sky hover:border-sky/30 transition-all"
-                            >
-                                #{{ $tag->name }}
-                            </a>
-                        @endforeach
-                    </div>
-                @endif
-
-                <div class="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-4">
-                    <h3 class="text-lg font-black">
-                        این مقاله را به اشتراک بگذار
-                    </h3>
-
-                    <div class="flex flex-wrap gap-3">
-                        <a
-                            href="https://t.me/share/url?url={{ urlencode($shareUrl) }}&text={{ urlencode($shareText) }}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="btn btn-primary"
-                        >
-                            <i class="fa-brands fa-telegram"></i>
-                            تلگرام
-                        </a>
-
-                        <a
-                            href="https://twitter.com/intent/tweet?url={{ urlencode($shareUrl) }}&text={{ urlencode($shareText) }}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="btn btn-primary"
-                        >
-                            <i class="fa-brands fa-x-twitter"></i>
-                            X
-                        </a>
-
-                        <button
-                            type="button"
-                            class="btn btn-primary"
-                            onclick="navigator.clipboard.writeText('{{ $shareUrl }}').then(() => alert('لینک کپی شد.'))"
-                        >
-                            <i class="fa-solid fa-link"></i>
-                            کپی لینک
-                        </button>
-                    </div>
-                </div>
-
-                <div class="rounded-2xl bg-gradient-to-l from-blue-600/15 to-cyan-400/10 border border-sky/20 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-5">
-                    <div class="space-y-2">
-                        <h3 class="text-xl font-black">
-                            پروژه بعدی‌ات را با {{ $siteName }} شروع کن
-                        </h3>
-
-                        <p class="text-sm text-snow/65 leading-7">
-                            اگر این مقاله برایت مفید بود، تیم رندیکس آماده است وبسایت، سئو یا کمپین دیجیتال تو را حرفه‌ای بسازد.
-                        </p>
-                    </div>
-
-                    <div class="flex flex-wrap gap-3">
-                        <a href="{{ route('request-project') }}" class="btn btn-primary">
-                            <i class="fa-solid fa-rocket"></i>
-                            درخواست پروژه
-                        </a>
-
-                        @if ($telegram)
-                            <a href="{{ $telegram }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-                                <i class="fa-brands fa-telegram"></i>
-                                تلگرام
-                            </a>
-                        @endif
-                    </div>
-                </div>
+            <article class="rx-post-content rv">
+                {!! $post->content !!}
             </article>
 
-            @if ($related->isNotEmpty())
-                <section class="mt-16 space-y-6">
-                    <h2 class="text-2xl font-black">
-                        مقالات مرتبط
-                    </h2>
-
-                    <div class="grid md:grid-cols-3 gap-5">
-                        @foreach ($related as $rel)
-                            <article class="glass p-5 space-y-4 hover:border-sky/30 transition-all">
-                                <a href="{{ route('blog.show', $rel->slug) }}" class="block rounded-2xl overflow-hidden border border-white/10 bg-white/5">
-                                    @if ($rel->image_path)
-                                        <img
-                                            src="{{ $rel->imageUrl() }}"
-                                            alt="{{ $rel->title }}"
-                                            class="w-full h-36 object-cover"
-                                            loading="lazy"
-                                        >
-                                    @else
-                                        <div class="w-full h-36 grid place-items-center text-sky/45 text-3xl">
-                                            <i class="fa-solid fa-article"></i>
-                                        </div>
-                                    @endif
-                                </a>
-
-                                <div class="space-y-2">
-                                    <h3 class="text-base font-black leading-7">
-                                        <a href="{{ route('blog.show', $rel->slug) }}" class="hover:text-sky transition-colors">
-                                            {{ $rel->title }}
-                                        </a>
-                                    </h3>
-
-                                    <p class="text-xs text-snow/55 leading-6">
-                                        {{ \Illuminate\Support\Str::limit($rel->displayExcerpt(), 90) }}
-                                    </p>
-                                </div>
-                            </article>
-                        @endforeach
-                    </div>
-                </section>
+            @if (! empty($tags))
+                <div class="rx-tech-tags rv" style="margin-top:22px;">
+                    @foreach ($tags as $tag)
+                        <span>#{{ $tag }}</span>
+                    @endforeach
+                </div>
             @endif
+
+            <div class="rx-post-share rv">
+                <span>اشتراک‌گذاری:</span>
+
+                @php $shareUrl = urlencode(route('blog.show', $post->slug)); $shareText = urlencode($post->title); @endphp
+
+                <a href="https://t.me/share/url?url={{ $shareUrl }}&text={{ $shareText }}" target="_blank" rel="noopener noreferrer" class="rx-social-link" title="تلگرام">
+                    <i class="fa-brands fa-telegram"></i>
+                </a>
+                <a href="https://wa.me/?text={{ $shareText }}%20{{ $shareUrl }}" target="_blank" rel="noopener noreferrer" class="rx-social-link" title="واتساپ">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </a>
+                <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ $shareUrl }}" target="_blank" rel="noopener noreferrer" class="rx-social-link" title="لینکدین">
+                    <i class="fa-brands fa-linkedin-in"></i>
+                </a>
+                <button type="button" class="rx-social-link" title="کپی لینک"
+                    onclick="navigator.clipboard.writeText('{{ route('blog.show', $post->slug) }}').then(function(){ window.rxToast && rxToast({ type:'success', message:'لینک مقاله کپی شد.' }); })">
+                    <i class="fa-solid fa-link"></i>
+                </button>
+            </div>
         </div>
     </section>
+
+    @if ($related->isNotEmpty())
+        <section class="rx-section tight">
+            <div class="rx-container">
+                <div class="rx-section-head">
+                    <h2>مقالات مرتبط</h2>
+                    <p>ادامه‌ی یادگیری از همین جنس مقالات.</p>
+                </div>
+
+                <div class="rx-blog-grid">
+                    @foreach ($related as $rel)
+                        @php
+                            $relImage = null;
+                            if (method_exists($rel, 'coverUrl')) $relImage = $rel->coverUrl();
+                            elseif (! empty($rel->cover_image)) $relImage = asset('storage/' . $rel->cover_image);
+                        @endphp
+
+                        <article class="rx-post-card rv">
+                            <a href="{{ route('blog.show', $rel->slug) }}" class="rx-post-media" wire:navigate>
+                                @if ($relImage)
+                                    <img src="{{ $relImage }}" alt="{{ $rel->title }}" loading="lazy">
+                                @else
+                                    <div class="rx-project-placeholder"><i class="fa-solid fa-newspaper"></i></div>
+                                @endif
+                            </a>
+
+                            <div class="rx-post-body">
+                                <h2 style="font-size:17px;">
+                                    <a href="{{ route('blog.show', $rel->slug) }}" wire:navigate>{{ $rel->title }}</a>
+                                </h2>
+                                <p>{{ \Illuminate\Support\Str::limit($rel->excerpt ?: strip_tags((string) ($rel->content ?? '')), 90) }}</p>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
+    <x-site.cta-band
+        title="این مقاله را روی کسب‌وکارت اجرا کن"
+        text="خواندن فقط نصف راه است؛ نیمه‌ی دوم را با هم می‌رویم."
+    />
 </div>

@@ -755,44 +755,7 @@
 
 
     {{-- ═══════════ سوالات متداول ═══════════ --}}
-    <section id="faq" class="px-5 md:px-10 scroll-mt-24 py-16">
-        <div class="max-w-4xl mx-auto">
-            <div class="text-center mb-14 space-y-4">
-                <p class="section-label justify-center rv">سوال داری؟</p>
-                <h2 class="text-3xl md:text-5xl font-black rv">سوالات متداول</h2>
-                <p class="text-[color:var(--rx-fg-muted)] max-w-2xl mx-auto leading-8 rv">
-                    چیزایی که خیلی‌ها قبل از شروع همکاری می‌پرسن.
-                </p>
-            </div>
-
-            <div class="space-y-4">
-                @php
-                    $faqs = [
-                        ['q' => 'چقدر طول می‌کشه تا نتیجه ببینم؟', 'a' => 'بستگی به مسیر داره. سئو معمولاً ۳ تا ۶ ماه زمان می‌بره، ولی طراحی وبسایت و کمپین‌های تبلیغاتی می‌تونن از هفته‌های اول نتیجه بدن. تو جلسه اول یه زمان‌بندی واقع‌بینانه می‌دیم.'],
-                        ['q' => 'هزینه‌ها چطوره؟', 'a' => 'شفاف و بر اساس نیاز تو. هیچ هزینه پنهانی نیست. قبل از شروع، دقیق می‌دونی چقدر و بابت چی پرداخت می‌کنی.'],
-                        ['q' => 'اگه الان سایت داشته باشم چی؟', 'a' => 'اول بررسی می‌کنیم. شاید سایتت نیاز به بازطراحی کامل نداشته باشه و فقط سرعت، سئو، تجربه کاربری یا مسیر تبدیلش مشکل داشته باشه.'],
-                        ['q' => 'فقط نجف‌آباد کار می‌کنید؟', 'a' => 'نجف‌آباد نقطه تمرکز اولیه ماست، ولی خدمات ما برای سراسر ایران و بازارهای آنلاین تعریف می‌شه.'],
-                        ['q' => 'بعد از تحویل پشتیبانی دارید؟', 'a' => 'بله. پشتیبانی بخشی از کار ماست، نه یه سرویس جدا. هر وقت نیاز داشتی، کنارشی.'],
-                        ['q' => 'چرا باید به شما اعتماد کنم؟', 'a' => 'لازم نیست با حرف قانع بشی. تو جلسه اول، نمونه کار، روند کاری و برنامه رو می‌بینی. بعد خودت تصمیم می‌گیری.'],
-                    ];
-                @endphp
-
-                @foreach($faqs as $faq)
-                    <div class="glass rv overflow-hidden">
-                        <button data-faq-toggle class="w-full flex items-center justify-between gap-4 p-6 text-right">
-                            <span class="font-bold text-base">{{ $faq['q'] }}</span>
-                            <span class="icon-tile !w-9 !h-9 !text-sm flex-shrink-0">
-                                <i class="fa-solid fa-plus transition-transform" data-faq-icon></i>
-                            </span>
-                        </button>
-                        <div data-faq-panel class="hidden px-6 pb-6">
-                            <p class="text-sm text-[color:var(--rx-fg-muted)] leading-8">{{ $faq['a'] }}</p>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
+    <x-site.faq location="home" />
 
     <div class="divider"></div>
 

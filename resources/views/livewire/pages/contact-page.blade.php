@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('components.layouts.app')] class extends Component {
+new #[Layout('components.layouts.app')]
+    class extends Component {
     public string $name = '';
 
     public string $email = '';
@@ -49,7 +50,7 @@ new #[Layout('components.layouts.app')] class extends Component {
 
     public function submit(): void
     {
-        if (! (bool) setting('contact.enabled', true)) {
+        if (!(bool) setting('contact.enabled', true)) {
             return;
         }
 
@@ -176,7 +177,7 @@ new #[Layout('components.layouts.app')] class extends Component {
                 </p>
             </div>
 
-            @if (! $contactEnabled)
+            @if (!$contactEnabled)
                 <div class="glass p-7 md:p-9 max-w-3xl mx-auto text-center space-y-5">
                     <div class="text-5xl text-amber-300">
                         <i class="fa-solid fa-screwdriver-wrench"></i>
@@ -192,12 +193,7 @@ new #[Layout('components.layouts.app')] class extends Component {
 
                     <div class="flex flex-wrap justify-center gap-3">
                         @if ($telegram)
-                            <a
-                                href="{{ $telegram }}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="btn btn-primary"
-                            >
+                            <a href="{{ $telegram }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
                                 <i class="fa-brands fa-telegram"></i>
                                 تلگرام
                             </a>

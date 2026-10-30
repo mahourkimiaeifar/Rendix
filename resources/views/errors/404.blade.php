@@ -1,15 +1,27 @@
-<x-layouts.app title="صفحه پیدا نشد | رندیکس">
-    <div class="min-h-screen flex items-center justify-center px-6 text-center">
-        <div class="space-y-6">
-            <div class="text-8xl md:text-9xl font-black gradient-text">404</div>
-            <h1 class="text-3xl md:text-4xl font-bold text-rendix-white">گم شدی؟</h1>
-            <p class="text-white/50 text-lg">نگران نباش، همه ما گاهی گم می‌شیم.</p>
-            <a href="/" wire:navigate class="btn-primary">
-                <span class="flex items-center gap-2">
-                    <i class="fas fa-arrow-right"></i>
-                    برگشت به خانه
-                </span>
-            </a>
+<!doctype html>
+<html lang="fa" dir="rtl" class="dark" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>۴۰۴ — صفحه پیدا نشد | رندیکس</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png?v=6') }}">
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    @vite(['resources/css/app.css'])
+</head>
+
+<body class="rx-error-body">
+    <main class="rx-error-card">
+        <div class="rx-error-code">۴۰۴</div>
+        <h1>این صفحه در کهکشان پیدا نشد</h1>
+        <p>ممکن است آدرس اشتباه باشد یا صفحه جابه‌جا شده باشد. بیا برگردیم به مسیر اصلی.</p>
+        <div class="rx-error-actions">
+            <a href="{{ url('/') }}" class="btn btn-primary"><i class="fa-solid fa-house"></i> صفحه اصلی</a>
+            <a href="{{ url('/contact') }}" class="btn btn-ghost"><i class="fa-solid fa-paper-plane"></i> تماس با ما</a>
         </div>
-    </div>
-</x-layouts.app>
+    </main>
+</body>
+
+</html>

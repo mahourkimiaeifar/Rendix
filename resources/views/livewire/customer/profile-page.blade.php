@@ -5,7 +5,8 @@ use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
-new #[Layout('components.layouts.app')] class extends Component {
+new #[Layout('components.layouts.customer')]
+    class extends Component {
     public string $name = '';
     public string $email = '';
     public string $phone = '';
@@ -36,159 +37,134 @@ new #[Layout('components.layouts.app')] class extends Component {
             'current_password' => ['required_with:password', 'string'],
             'password' => ['nullable', 'confirmed', Password::min(8)],
         ], [
-            'name.required' => 'نام خود را وارد کنید.',
-            'name.min' => 'نام باید حداقل ۳ کاراکتر باشد.',
-            'email.required' => 'ایمیل را وارد کنید.',
+            'name.required' => 'نام را وارد کن.',
+            'email.required' => 'ایمیل را وارد کن.',
             'email.email' => 'ایمیل معتبر نیست.',
-            'email.unique' => 'این ایمیل قبلاً توسط کاربر دیگری استفاده شده است.',
-            'phone.min' => 'شماره تماس معتبر نیست.',
-            'phone.max' => 'شماره تماس معتبر نیست.',
-            'current_password.required_with' => 'برای تغییر رمز عبور، رمز فعلی را وارد کنید.',
-            'password.confirmed' => 'تکرار رمز عبور مطابق نیست.',
-            'password.min' => 'رمز عبور جدید باید حداقل ۸ کاراکتر باشد.',
+            'email.unique' => 'این ایمیل برای کاربر دیگری ثبت شده است.',
+            'current_password.required_with' => 'برای تغییر رمز، رمز فعلی لازم است.',
+            'password.confirmed' => 'تکرار رمز مطابق نیست.',
+            'password.min' => 'رمز جدید باید حداقل ۸ کاراکتر باشد.',
         ]);
 
-        if (! empty($validated['password'])) {
-            if (! Hash::check($validated['current_password'], $user->password)) {
-                $this->addError('current_password', 'رمز عبور فعلی درست نیست.');
+        if (!empty($validated['password']) && !Hash::check($validated['current_password'], $user->password)) {
+            $this->addError('current_password', 'رمز عبور فعلی درست نیست.');
 
-                return;
-            }
+            return;
         }
 
         $user->name = trim($validated['name']);
         $user->email = trim($validated['email']);
+        $user->forceFill(['phone' => trim($validated['phone'] ?? '') ?: null]);
 
-        $user->forceFill([
-            'phone' => trim($validated['phone'] ?? '') ?: null,
-        ]);
-
-        if (! empty($validated['password'])) {
+        if (!empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
         }
 
         $user->save();
 
         $this->reset(['current_password', 'password', 'password_confirmation']);
+
         $this->saved = true;
     }
 };
 
 ?>
 
-@php
-    $user = auth()->user();
-    $siteName = setting('site.name', 'رندیکس');
-@endphp
+@section('cust.title', 'پروفایل و رمز عبور')
+@section('cust.icon', 'fa-solid fa-user-gear')
 
+@if ($saved)
+    <div class="st-pill st-done" style="padding:12px 16px;font-size:13px;">
+        <i class="fa-solid fa-circle-check"></i>
+        تغییرات با موفقیت ذخیره شد.
+    </div>
+@endif
 <div>
-    <section class="pt-36 pb-24 px-5 md:px-10">
-        <div class="max-w-3xl mx-auto">
+    <div class="rx-cust-card" style="padding:20px;">
+        <h2 style="margin:0 0 16px;font-size:16px;font-weight:950;">اطلاعات حساب</h2>
 
-            <div class="space-y-5 mb-10">
-                <div class="badge">
-                    <span class="badge-dot"></span>
-                    پروفایل کاربری
+        <form wire:submit="save" style="display:grid;gap:14px;">
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;" class="rx-profile-grid2">
+                <div class="rx-field">
+                    <label class="rx-cust-muted"
+                        style="display:block;margin-bottom:6px;font-size:12px;font-weight:800;">نام و نام خانوادگی
+                        *</label>
+                    <input type="text" wire:model="name" class="rx-select"
+                        style="background-image:none;padding-left:14px;" required>
+                    @error('name') <span class="text-coral"
+                    style="font-size:12px;margin-top:4px;display:block;">{{ $message }}</span> @enderror
                 </div>
 
-                <h1 class="text-3xl md:text-5xl font-black leading-[1.25]">
-                    تنظیمات حساب {{ $siteName }}
-                </h1>
+                <div class="rx-field">
+                    <label class="rx-cust-muted"
+                        style="display:block;margin-bottom:6px;font-size:12px;font-weight:800;">ایمیل *</label>
+                    <input type="email" wire:model="email" dir="ltr" class="rx-select"
+                        style="background-image:none;padding-left:14px;" required>
+                    @error('email') <span class="text-coral"
+                    style="font-size:12px;margin-top:4px;display:block;">{{ $message }}</span> @enderror
+                </div>
 
-                <p class="text-snow/60 leading-8">
-                    اطلاعات تماس و رمز عبور خود را مدیریت کن. این اطلاعات برای پیگیری درخواست‌های پروژه استفاده می‌شود.
-                </p>
+                <div class="rx-field" style="grid-column:1/-1;">
+                    <label class="rx-cust-muted"
+                        style="display:block;margin-bottom:6px;font-size:12px;font-weight:800;">شماره تماس</label>
+                    <input type="tel" wire:model="phone" dir="ltr" class="rx-select"
+                        style="background-image:none;padding-left:14px;">
+                    @error('phone') <span class="text-coral"
+                    style="font-size:12px;margin-top:4px;display:block;">{{ $message }}</span> @enderror
+                </div>
             </div>
 
-            @if ($saved)
-                <div class="glass p-5 mb-6 rounded-2xl border border-emerald-400/25 bg-emerald-400/10 text-emerald-200 text-sm leading-7">
-                    <i class="fa-solid fa-circle-check"></i>
-                    تغییرات با موفقیت ذخیره شد.
-                </div>
-            @endif
+            <div style="border-top:1px solid var(--rx-border);padding-top:16px;display:grid;gap:14px;">
+                <h3 style="margin:0;font-size:14px;font-weight:950;">تغییر رمز عبور <span class="rx-cust-muted"
+                        style="font-weight:700;">(اختیاری)</span></h3>
 
-            <form wire:submit="save" class="glass p-7 md:p-9 space-y-6">
-                <div class="space-y-2">
-                    <label class="text-sm font-bold text-snow/70">نام و نام خانوادگی *</label>
-                    <input
-                        type="text"
-                        wire:model="name"
-                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-sky/60 transition-colors"
-                        required
-                    >
-                    @error('name') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
+                <div class="rx-field">
+                    <label class="rx-cust-muted"
+                        style="display:block;margin-bottom:6px;font-size:12px;font-weight:800;">رمز فعلی</label>
+                    <input type="password" wire:model="current_password" class="rx-select"
+                        style="background-image:none;padding-left:14px;">
+                    @error('current_password') <span class="text-coral"
+                    style="font-size:12px;margin-top:4px;display:block;">{{ $message }}</span> @enderror
                 </div>
 
-                <div class="space-y-2">
-                    <label class="text-sm font-bold text-snow/70">ایمیل *</label>
-                    <input
-                        type="email"
-                        wire:model="email"
-                        dir="ltr"
-                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-sky/60 transition-colors"
-                        required
-                    >
-                    @error('email') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
-                </div>
-
-                <div class="space-y-2">
-                    <label class="text-sm font-bold text-snow/70">شماره تماس</label>
-                    <input
-                        type="tel"
-                        wire:model="phone"
-                        dir="ltr"
-                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-sky/60 transition-colors"
-                    >
-                    @error('phone') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
-                </div>
-
-                <div class="pt-4 border-t border-white/10 space-y-5">
-                    <h2 class="text-lg font-black">تغییر رمز عبور</h2>
-
-                    <p class="text-xs text-snow/45 leading-7">
-                        اگر نمی‌خواهی رمز عبور را تغییر دهی، این بخش را خالی بگذار.
-                    </p>
-
-                    <div class="space-y-2">
-                        <label class="text-sm font-bold text-snow/70">رمز عبور فعلی</label>
-                        <input
-                            type="password"
-                            wire:model="current_password"
-                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-sky/60 transition-colors"
-                        >
-                        @error('current_password') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;"
+                    class="rx-profile-grid2">
+                    <div class="rx-field">
+                        <label class="rx-cust-muted"
+                            style="display:block;margin-bottom:6px;font-size:12px;font-weight:800;">رمز جدید</label>
+                        <input type="password" wire:model="password" class="rx-select"
+                            style="background-image:none;padding-left:14px;">
+                        @error('password') <span class="text-coral"
+                        style="font-size:12px;margin-top:4px;display:block;">{{ $message }}</span> @enderror
                     </div>
 
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div class="space-y-2">
-                            <label class="text-sm font-bold text-snow/70">رمز عبور جدید</label>
-                            <input
-                                type="password"
-                                wire:model="password"
-                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-sky/60 transition-colors"
-                            >
-                            @error('password') <span class="text-xs text-red-400">{{ $message }}</span> @enderror
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="text-sm font-bold text-snow/70">تکرار رمز عبور جدید</label>
-                            <input
-                                type="password"
-                                wire:model="password_confirmation"
-                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-sky/60 transition-colors"
-                            >
-                        </div>
+                    <div class="rx-field">
+                        <label class="rx-cust-muted"
+                            style="display:block;margin-bottom:6px;font-size:12px;font-weight:800;">تکرار رمز
+                            جدید</label>
+                        <input type="password" wire:model="password_confirmation" class="rx-select"
+                            style="background-image:none;padding-left:14px;">
                     </div>
                 </div>
+            </div>
 
-                <button type="submit" class="btn btn-primary w-full !py-4" wire:loading.attr="disabled">
-                    <span wire:loading.remove>
-                        ذخیره تغییرات
+            <div>
+                <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                    <span wire:loading.remove wire:target="save">
                         <i class="fa-solid fa-floppy-disk"></i>
+                        ذخیره تغییرات
                     </span>
-                    <span wire:loading>در حال ذخیره...</span>
+                    <span wire:loading wire:target="save">در حال ذخیره...</span>
                 </button>
-            </form>
-        </div>
-    </section>
+            </div>
+        </form>
+    </div>
+
+    <style>
+        @media (max-width: 760px) {
+            .rx-profile-grid2 {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
 </div>

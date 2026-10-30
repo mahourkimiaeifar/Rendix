@@ -1,20 +1,33 @@
 @php
     $siteName = setting('site.name', 'رندیکس');
+    $logo = setting_url('brand.logo', asset('images/favicon.png?v=6'));
+    $tagline = setting('site.tagline', 'طراحی وبسایت، سئو و دیجیتال مارکتینگ');
 
-    $logo = setting_url('brand.logo', '/images/favicon.png?v=6');
+    $contactEmail = setting('contact.email');
+    $contactPhone = setting('contact.phone');
+    $contactAddress = setting('contact.address');
+    $contactPhoneTel = preg_replace('/\D/', '', (string) $contactPhone);
 
-    $tagline = setting(
-        'site.tagline',
-        'ما فقط وبسایت نمی‌سازیم؛ مسیر رشد می‌سازیم. از نجف‌آباد، برای کسب‌وکارهایی که می‌خوان جدی دیده بشن.'
-    );
+    $socials = [
+        ['label' => 'تلگرام', 'icon' => 'fa-brands fa-telegram', 'url' => setting('social.telegram')],
+        ['label' => 'اینستاگرام', 'icon' => 'fa-brands fa-instagram', 'url' => setting('social.instagram')],
+        ['label' => 'واتساپ', 'icon' => 'fa-brands fa-whatsapp', 'url' => setting('social.whatsapp')],
+        ['label' => 'لینکدین', 'icon' => 'fa-brands fa-linkedin-in', 'url' => setting('social.linkedin')],
+    ];
 
-    $contactEmail = setting('contact.email') ?: 'info@rendix.ir';
+    $preparedSocials = [];
 
-    $contactPhone = setting('contact.phone') ?: '۰۹۱۲ ۳۴۵ ۶۷۹';
-    $contactPhoneLatin = \App\Support\Jalali::toLatinDigits((string) $contactPhone);
-    $contactPhoneTel = preg_replace('/\D/', '', $contactPhoneLatin);
+    foreach ($socials as $social) {
+        $url = trim((string) ($social['url'] ?? ''));
 
-    $contactAddress = setting('contact.address') ?: 'نجف‌آباد، اصفهان';
+        if ($url !== '') {
+            $preparedSocials[] = [
+                'label' => $social['label'],
+                'icon' => $social['icon'],
+                'url' => $url,
+            ];
+        }
+    }
 
     try {
         $footerServices = \App\Models\Service::query()
@@ -28,220 +41,302 @@
         $footerServices = [];
     }
 
-    if (empty($footerServices)) {
-        $footerServices = [
-            'web-design' => 'طراحی وبسایت',
-            'seo' => 'سئو',
-            'digital-marketing' => 'دیجیتال مارکتینگ',
-            'ecommerce' => 'فروشگاه اینترنتی',
-        ];
-    }
+    $legalPages = [];
 
-    $socials = [
-        [
-            'label' => 'اینستاگرام',
-            'icon' => 'fa-brands fa-instagram',
-            'url' => setting('social.instagram'),
-        ],
-        [
-            'label' => 'تلگرام',
-            'icon' => 'fa-brands fa-telegram',
-            'url' => setting('social.telegram', 'https://t.me/RendixDMServices'),
-        ],
-        [
-            'label' => 'لینکدین',
-            'icon' => 'fa-brands fa-linkedin-in',
-            'url' => setting('social.linkedin'),
-        ],
-        [
-            'label' => 'واتساپ',
-            'icon' => 'fa-brands fa-whatsapp',
-            'url' => setting('social.whatsapp'),
-        ],
-    ];
-
-    $preparedSocials = [];
-
-    foreach ($socials as $social) {
-        $url = trim((string) ($social['url'] ?? ''));
-
-        if ($social['label'] === 'واتساپ' && $url !== '' && !filter_var($url, FILTER_VALIDATE_URL)) {
-            $url = 'https://wa.me/' . preg_replace('/\D/', '', \App\Support\Jalali::toLatinDigits($url));
-        }
-
-        if ($url !== '') {
-            $preparedSocials[] = [
-                'label' => $social['label'],
-                'icon' => $social['icon'],
-                'url' => $url,
-            ];
+    if (class_exists(\App\Models\Page::class)) {
+        try {
+            $legalPages = \App\Models\Page::query()
+                ->active()
+                ->ordered()
+                ->limit(4)
+                ->pluck('title', 'slug')
+                ->all();
+        } catch (\Throwable $e) {
+            $legalPages = [];
         }
     }
 
-    try {
-        $jalaliYear = \App\Support\Jalali::toPersianDigits(
-            \Morilog\Jalali\Jalalian::forge(now())->format('Y')
-        );
-    } catch (\Throwable $e) {
-        $jalaliYear = '۱۴۴';
+    $quickLinks = [];
+
+    if (Route::has('about')) {
+        $quickLinks[] = ['label' => 'درباره ما', 'url' => route('about'), 'icon' => 'fa-solid fa-circle-info'];
+    }
+
+    if (Route::has('services')) {
+        $quickLinks[] = ['label' => 'خدمات', 'url' => route('services'), 'icon' => 'fa-solid fa-layer-group'];
+    }
+
+    if (Route::has('projects')) {
+        $quickLinks[] = ['label' => 'نمونه‌کارها', 'url' => route('projects'), 'icon' => 'fa-solid fa-diagram-project'];
+    }
+
+    if (Route::has('blog')) {
+        $quickLinks[] = ['label' => 'بلاگ', 'url' => route('blog'), 'icon' => 'fa-solid fa-newspaper'];
+    }
+
+    if (Route::has('request-project')) {
+        $quickLinks[] = ['label' => 'درخواست پروژه', 'url' => route('request-project'), 'icon' => 'fa-solid fa-clipboard-list'];
+    }
+
+    if (Route::has('contact')) {
+        $quickLinks[] = ['label' => 'تماس با ما', 'url' => route('contact'), 'icon' => 'fa-solid fa-paper-plane'];
+    }
+
+    $year = now()->format('Y');
+
+    if (class_exists(\App\Support\Jalali::class)) {
+        try {
+            $jalaliDate = \App\Support\Jalali::date(now());
+            $year = \App\Support\Jalali::toPersianDigits(explode('/', $jalaliDate)[0] ?? $year);
+        } catch (\Throwable $e) {
+            //
+        }
     }
 @endphp
 
-<footer class="relative mt-32 border-t border-white/5 bg-navy-2/40">
-    <div class="max-w-7xl mx-auto px-5 md:px-10 py-16">
+<footer class="rx-footer">
+    <div class="rx-footer-inner">
+        <div class="rx-footer-top">
+            <div class="rx-footer-brand">
+                <a href="{{ Route::has('home') ? route('home') : url('/') }}" class="rx-footer-logo" wire:navigate>
+                    <img src="{{ $logo }}" alt="{{ $siteName }}">
+                    <span>{{ $siteName }}</span>
+                </a>
 
-        {{-- بالا: برند + خبرنامه --}}
-        <div
-            class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 pb-12 border-b border-white/5">
-            <div class="space-y-3 max-w-md">
-                <div class="flex items-center gap-3">
-                    <img src="{{ $logo }}" alt="{{ $siteName }}" class="w-11 h-11">
-                    <span class="text-2xl font-black">{{ $siteName }}</span>
-                </div>
-
-                <p class="text-sm text-snow/50 leading-7">
+                <p class="rx-footer-desc">
                     {{ $tagline }}
                 </p>
+
+                @if (!empty($preparedSocials))
+                    <div class="rx-footer-social">
+                        @foreach ($preparedSocials as $social)
+                            <a href="{{ $social['url'] }}" target="_blank" rel="noopener noreferrer" class="rx-social-link"
+                                title="{{ $social['label'] }}" aria-label="{{ $social['label'] }}">
+                                <i class="{{ $social['icon'] }}"></i>
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
             </div>
 
-            <div class="w-full max-w-md">
-                <p class="text-sm font-bold mb-3 text-snow/70">عضویت در خبرنامه رشد</p>
+            <div class="rx-footer-cta">
+                <h3>آماده‌ای رشد دیجیتال را شروع کنی؟</h3>
 
-                <form class="flex gap-2" onsubmit="return false;">
-                    <input type="email" placeholder="ایمیل شما"
-                        class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-snow/30 focus:outline-none focus:border-sky/50 transition-colors">
-                    <button type="submit" class="btn btn-primary !px-5">
+                <p>
+                    پروژه‌ات را مرحله‌به‌مرحله تعریف کن؛ ما بر اساس هدف، بودجه و زمان‌بندی، مسیر اجرا را پیشنهاد
+                    می‌دهیم.
+                </p>
+
+                <div class="flex flex-wrap gap-3">
+                    @if (Route::has('request-project'))
+                        <a href="{{ route('request-project') }}" class="btn btn-primary btn-sm" wire:navigate>
+                            <i class="fa-solid fa-rocket"></i>
+                            <span>درخواست پروژه</span>
+                        </a>
+                    @endif
+
+                    @if (Route::has('contact'))
+                        <a href="{{ route('contact') }}" class="btn btn-ghost btn-sm" wire:navigate>
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>تماس</span>
+                        </a>
+                    @endif
+                </div>
+
+                <form method="POST" action="{{ route('newsletter.subscribe') }}" class="rx-news-form">
+                    @csrf
+
+                    <input type="email" name="email" required dir="ltr" placeholder="your@email.com — خبرنامه رشد"
+                        class="rx-news-input">
+
+                    <button type="submit" class="btn btn-ghost btn-sm" title="عضویت در خبرنامه">
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
                 </form>
+
+                @if (session('newsletter_status') === 'subscribed')
+                    <p class="rx-news-flash ok">عضویتت در خبرنامه رشد ثبت شد 🎉</p>
+                @elseif (session('newsletter_status') === 'unsubscribed')
+                    <p class="rx-news-flash off">از خبرنامه خارج شدی؛ هر وقت خواستی برگرد.</p>
+                @endif
             </div>
         </div>
 
-        {{-- لینک‌ها --}}
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-10 py-12">
-            <div class="space-y-4">
-                <p class="font-bold text-sm">{{ $siteName }}</p>
+        <div class="rx-footer-grid">
+            <div class="rx-footer-col">
+                <h4>دسترسی سریع</h4>
 
-                <ul class="space-y-3 text-sm text-snow/50">
-                    <li>
-                        <a href="{{ route('about') }}" wire:navigate class="hover:text-sky transition-colors">
-                            درباره ما
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('request-project') }}" wire:navigate class="hover:text-sky transition-colors">
-                            درخواست پروژه
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('contact') }}" wire:navigate class="hover:text-sky transition-colors">
-                            تماس با ما
-                        </a>
-                    </li>
-
-                    @if (Route::has('projects'))
+                <ul class="rx-footer-links">
+                    @foreach ($quickLinks as $link)
                         <li>
-                            <a href="{{ route('projects') }}" wire:navigate class="hover:text-sky transition-colors">
-                                نمونه‌کارها
-                            </a>
-                        </li>
-                    @endif
-
-                    <li>
-                        @auth
-                            <a href="{{ route('dashboard') }}" wire:navigate class="hover:text-sky transition-colors">
-                                داشبورد من
-                            </a>
-                        @else
-                            <a href="{{ route('login') }}" wire:navigate class="hover:text-sky transition-colors">
-                                ورود / ثبت‌نام
-                            </a>
-                        @endauth
-                    </li>
-                    
-                    <li>
-                        <a href="{{ url('/#faq') }}" class="hover:text-sky transition-colors">
-                            سوالات متداول
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="space-y-4">
-                <p class="font-bold text-sm">خدمات</p>
-
-                <ul class="space-y-3 text-sm text-snow/50">
-                    @foreach ($footerServices as $slug => $title)
-                        <li>
-                            <a href="{{ route('services.show', $slug) }}" class="hover:text-sky transition-colors">
-                                {{ $title }}
+                            <a href="{{ $link['url'] }}" class="rx-footer-link" wire:navigate>
+                                <i class="{{ $link['icon'] }}"></i>
+                                <span>{{ $link['label'] }}</span>
                             </a>
                         </li>
                     @endforeach
                 </ul>
             </div>
 
-            <div class="space-y-4">
-                <p class="font-bold text-sm">تماس</p>
+            <div class="rx-footer-col">
+                <h4>خدمات</h4>
 
-                <ul class="space-y-3 text-sm text-snow/50">
-                    @if ($contactAddress)
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-location-dot text-sky/70"></i>
-                            {{ $contactAddress }}
+                <ul class="rx-footer-links">
+                    @forelse ($footerServices as $slug => $title)
+                        <li>
+                            @if (Route::has('services.show'))
+                                <a href="{{ route('services.show', $slug) }}" class="rx-footer-link" wire:navigate>
+                                    <i class="fa-solid fa-arrow-left"></i>
+                                    <span>{{ $title }}</span>
+                                </a>
+                            @elseif (Route::has('contact'))
+                                <a href="{{ route('contact', ['service' => $slug]) }}" class="rx-footer-link" wire:navigate>
+                                    <i class="fa-solid fa-arrow-left"></i>
+                                    <span>{{ $title }}</span>
+                                </a>
+                            @endif
                         </li>
-                    @endif
-
-                    @if ($contactEmail)
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-envelope text-sky/70"></i>
-                            <a href="mailto:{{ $contactEmail }}" class="hover:text-sky transition-colors" dir="ltr">
-                                {{ $contactEmail }}
-                            </a>
+                    @empty
+                        <li>
+                            @if (Route::has('services'))
+                                <a href="{{ route('services') }}" class="rx-footer-link" wire:navigate>
+                                    <i class="fa-solid fa-layer-group"></i>
+                                    <span>همه خدمات</span>
+                                </a>
+                            @endif
                         </li>
-                    @endif
-
-                    @if ($contactPhone)
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-phone text-sky/70"></i>
-                            <a href="tel:{{ $contactPhoneTel }}" class="hover:text-sky transition-colors">
-                                {{ $contactPhone }}
-                            </a>
-                        </li>
-                    @endif
+                    @endforelse
                 </ul>
             </div>
 
-            <div class="space-y-4">
-                <p class="font-bold text-sm">همراه ما باشید</p>
+            <div class="rx-footer-col">
+                <h4>صفحات قانونی</h4>
 
-                <div class="flex gap-3">
-                    @forelse ($preparedSocials as $social)
-                        <a href="{{ $social['url'] }}" target="_blank" rel="noopener noreferrer"
-                            title="{{ $social['label'] }}"
-                            class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-snow/60 hover:text-sky hover:border-sky/40 transition-all">
-                            <i class="{{ $social['icon'] }}"></i>
-                        </a>
+                <ul class="rx-footer-links">
+                    @forelse ($legalPages as $slug => $title)
+                        @if (Route::has('page'))
+                            <li>
+                                <a href="{{ route('page', $slug) }}" class="rx-footer-link" wire:navigate>
+                                    <i class="fa-solid fa-file-lines"></i>
+                                    <span>{{ $title }}</span>
+                                </a>
+                            </li>
+                        @endif
                     @empty
-                        <a href="https://t.me/RendixDMServices" target="_blank" rel="noopener noreferrer" title="تلگرام"
-                            class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-snow/60 hover:text-sky hover:border-sky/40 transition-all">
-                            <i class="fa-brands fa-telegram"></i>
-                        </a>
+                        <li>
+                            <span class="rx-footer-link" style="cursor: default;">
+                                <i class="fa-solid fa-scale-balanced"></i>
+                                <span>از پنل قابل افزودن است</span>
+                            </span>
+                        </li>
                     @endforelse
+                </ul>
+            </div>
+
+            <div class="rx-footer-col">
+                <h4>تماس با ما</h4>
+
+                <div class="rx-footer-contact">
+                    @if ($contactAddress)
+                        <div class="rx-footer-contact-item">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span>{{ $contactAddress }}</span>
+                        </div>
+                    @endif
+
+                    @if ($contactEmail)
+                        <div class="rx-footer-contact-item">
+                            <i class="fa-solid fa-envelope"></i>
+                            <a href="mailto:{{ $contactEmail }}" dir="ltr">{{ $contactEmail }}</a>
+                        </div>
+                    @endif
+
+                    @if ($contactPhone)
+                        <div class="rx-footer-contact-item">
+                            <i class="fa-solid fa-phone"></i>
+                            <a href="tel:{{ $contactPhoneTel }}">{{ $contactPhone }}</a>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
 
-        {{-- پایین --}}
-        <div
-            class="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-white/5 text-xs text-snow/35">
-            <p>
-                © {{ $jalaliYear }} {{ $siteName }} — تمامی حقوق محفوظ است.
-            </p>
+        <div class="rx-footer-bottom">
+            <p>© {{ $year }} {{ $siteName }} — تمامی حقوق محفوظ است.</p>
 
-            <p class="flex items-center gap-1.5">
-                ساخته‌شده با <i class="fa-solid fa-heart text-primary"></i> در نجف‌آباد
+            <p class="flex items-center gap-2">
+                <i class="fa-solid fa-heart text-rose-400"></i>
+                ساخته‌شده برای رشد کسب‌وکارهای جدی
             </p>
         </div>
     </div>
 </footer>
+
+@once
+    <script>
+        (function () {
+            function initReveal() {
+                document.documentElement.classList.add('rx-reveal-ready');
+
+                var els = document.querySelectorAll('.rv:not(.rv-in)');
+
+                if (!('IntersectionObserver' in window)) {
+                    els.forEach(function (el) { el.classList.add('rv-in'); });
+                    return;
+                }
+
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('rv-in');
+                            io.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+
+                els.forEach(function (el) { io.observe(el); });
+            }
+
+            function initCounters() {
+                var nums = document.querySelectorAll('[data-count]');
+
+                if (!('IntersectionObserver' in window)) {
+                    nums.forEach(function (el) {
+                        el.textContent = Number(el.dataset.count).toLocaleString('fa-IR') + (el.dataset.suffix || '');
+                    });
+                    return;
+                }
+
+                var io2 = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (!entry.isIntersecting) { return; }
+
+                        var el = entry.target;
+                        io2.unobserve(el);
+
+                        var target = parseFloat(el.dataset.count) || 0;
+                        var suffix = el.dataset.suffix || '';
+                        var duration = 1300;
+                        var start = null;
+
+                        function step(ts) {
+                            if (!start) { start = ts; }
+                            var p = Math.min((ts - start) / duration, 1);
+                            var eased = 1 - Math.pow(1 - p, 3);
+                            var val = Math.floor(eased * target);
+                            el.textContent = val.toLocaleString('fa-IR') + suffix;
+                            if (p < 1) { requestAnimationFrame(step); }
+                        }
+
+                        requestAnimationFrame(step);
+                    });
+                }, { threshold: 0.4 });
+
+                nums.forEach(function (el) { io2.observe(el); });
+            }
+
+            document.addEventListener('DOMContentLoaded', function () { initReveal(); initCounters(); });
+            document.addEventListener('livewire:navigated', function () { initReveal(); initCounters(); });
+        })();
+    </script>
+@endonce

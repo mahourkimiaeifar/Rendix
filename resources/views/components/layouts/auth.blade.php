@@ -1,28 +1,35 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
+@php
+    $siteName = setting('site.name', 'رندیکس');
 
+    $adminVite = ['resources/css/admin.css'];
+
+    if (file_exists(resource_path('js/admin.js'))) {
+        $adminVite[] = 'resources/js/admin.js';
+    }
+@endphp
+<!doctype html>
+<html lang="fa" dir="rtl" class="dark" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex,nofollow,noarchive">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="robots" content="noindex, nofollow">
 
-    <title>ورود به پنل رندیکس</title>
+    <title>@yield('title', 'ورود به پنل ' . $siteName)</title>
 
-    <link rel="icon" type="image/png" href="/images/favicon.png?v=6">
+    <link rel="icon" type="image/png" href="{{ setting_url('brand.favicon', asset('images/favicon.png?v=6')) }}">
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
     @livewireStyles
-    @vite(['resources/css/admin.css', 'resources/js/admin.js'])
+    @vite($adminVite)
 </head>
-
 <body class="admin-auth-body">
-    <div class="admin-auth-shell">
-        {{ $slot }}
-    </div>
+    {{ $slot }}
+
+    <div id="rxds-toast-stack" class="rxds-toast-stack" aria-live="polite" aria-atomic="true"></div>
 
     @livewireScripts
-</body>
 
+    @include('components.rx-toast-js')
+</body>
 </html>

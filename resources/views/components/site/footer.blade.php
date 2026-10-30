@@ -1,34 +1,33 @@
 @php
     $siteName = setting('site.name', 'رندیکس');
-
     $logo = setting_url('brand.logo', asset('images/favicon.png?v=6'));
+    $tagline = setting('site.tagline', 'طراحی وبسایت، سئو و دیجیتال مارکتینگ');
 
-    $aboutText = setting('site.tagline')
-        ?: 'ما فقط وبسایت نمی‌سازیم؛ مسیر رشد می‌سازیم. از نجف‌آباد، برای کسب‌وکارهایی که می‌خوان جدی دیده بشن.';
+    $contactEmail = setting('contact.email');
+    $contactPhone = setting('contact.phone');
+    $contactAddress = setting('contact.address');
+    $contactPhoneTel = preg_replace('/\D/', '', (string) $contactPhone);
 
-    $contactEmail = setting('contact.email') ?: 'info@rendix.ir';
+    $socials = [
+        ['label' => 'تلگرام', 'icon' => 'fa-brands fa-telegram', 'url' => setting('social.telegram')],
+        ['label' => 'اینستاگرام', 'icon' => 'fa-brands fa-instagram', 'url' => setting('social.instagram')],
+        ['label' => 'واتساپ', 'icon' => 'fa-brands fa-whatsapp', 'url' => setting('social.whatsapp')],
+        ['label' => 'لینکدین', 'icon' => 'fa-brands fa-linkedin-in', 'url' => setting('social.linkedin')],
+    ];
 
-    $contactPhone = setting('contact.phone') ?: '۰۹۲ ۳۴۵ ۶۷۹';
+    $preparedSocials = [];
 
-    $contactAddress = setting('contact.address') ?: 'نجف‌آباد، اصفهان';
+    foreach ($socials as $social) {
+        $url = trim((string) ($social['url'] ?? ''));
 
-    $toLatin = static function ($value): string {
-        return str_replace(
-            ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'],
-            ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-            (string) $value
-        );
-    };
-
-    $toPersianDigits = static function ($value): string {
-        return str_replace(
-            ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-            ['۰', '', '۲', '', '۴', '', '۶', '', '۸', ''],
-            (string) $value
-        );
-    };
-
-    $contactPhoneTel = preg_replace('/\D/', '', $toLatin($contactPhone));
+        if ($url !== '') {
+            $preparedSocials[] = [
+                'label' => $social['label'],
+                'icon' => $social['icon'],
+                'url' => $url,
+            ];
+        }
+    }
 
     try {
         $footerServices = \App\Models\Service::query()
@@ -42,207 +41,210 @@
         $footerServices = [];
     }
 
-    if (empty($footerServices)) {
-        $footerServices = [
-            'web-design' => 'طراحی وبسایت',
-            'seo' => 'سئو',
-            'digital-marketing' => 'دیجیتال مارکتینگ',
-            'ecommerce' => 'فروشگاه اینترنتی',
-        ];
+    try {
+        $legalPages = \App\Models\Page::query()
+            ->active()
+            ->ordered()
+            ->limit(4)
+            ->pluck('title', 'slug')
+            ->all();
+    } catch (\Throwable $e) {
+        $legalPages = [];
     }
 
-    $socialDefinitions = [
-        [
-            'label' => 'اینستاگرام',
-            'icon' => 'fa-brands fa-instagram',
-            'url' => setting('social.instagram'),
-        ],
-        [
-            'label' => 'تلگرام',
-            'icon' => 'fa-brands fa-telegram',
-            'url' => setting('social.telegram', 'https://t.me/RendixDMServices'),
-        ],
-        [
-            'label' => 'لینکدین',
-            'icon' => 'fa-brands fa-linkedin-in',
-            'url' => setting('social.linkedin'),
-        ],
-        [
-            'label' => 'واتساپ',
-            'icon' => 'fa-brands fa-whatsapp',
-            'url' => setting('social.whatsapp'),
-        ],
-    ];
+    $quickLinks = [];
 
-    $preparedSocials = [];
-
-    foreach ($socialDefinitions as $definition) {
-        $url = trim((string) ($definition['url'] ?? ''));
-
-        if ($definition['label'] === 'واتساپ' && $url !== '' && ! filter_var($url, FILTER_VALIDATE_URL)) {
-            $url = 'https://wa.me/' . preg_replace('/\D/', '', $toLatin($url));
-        }
-
-        if ($url !== '') {
-            $preparedSocials[] = [
-                'label' => $definition['label'],
-                'icon' => $definition['icon'],
-                'url' => $url,
-            ];
-        }
+    if (Route::has('about')) {
+        $quickLinks[] = ['label' => 'درباره ما', 'url' => route('about'), 'icon' => 'fa-solid fa-circle-info'];
     }
 
-    if (empty($preparedSocials)) {
-        $preparedSocials[] = [
-            'label' => 'تلگرام',
-            'icon' => 'fa-brands fa-telegram',
-            'url' => 'https://t.me/RendixDMServices',
-        ];
+    if (Route::has('services')) {
+        $quickLinks[] = ['label' => 'خدمات', 'url' => route('services'), 'icon' => 'fa-solid fa-layer-group'];
+    }
+
+    if (Route::has('projects')) {
+        $quickLinks[] = ['label' => 'نمونه‌کارها', 'url' => route('projects'), 'icon' => 'fa-solid fa-diagram-project'];
+    }
+
+    if (Route::has('blog')) {
+        $quickLinks[] = ['label' => 'بلاگ', 'url' => route('blog'), 'icon' => 'fa-solid fa-newspaper'];
+    }
+
+    if (Route::has('request-project')) {
+        $quickLinks[] = ['label' => 'درخواست پروژه', 'url' => route('request-project'), 'icon' => 'fa-solid fa-clipboard-list'];
+    }
+
+    if (Route::has('contact')) {
+        $quickLinks[] = ['label' => 'تماس با ما', 'url' => route('contact'), 'icon' => 'fa-solid fa-paper-plane'];
     }
 
     try {
         $jalaliDate = \App\Support\Jalali::date(now());
-        $jalaliYear = $toPersianDigits(explode('/', $jalaliDate)[0] ?? now()->format('Y'));
+        $year = \App\Support\Jalali::toPersianDigits(explode('/', $jalaliDate)[0] ?? now()->format('Y'));
     } catch (\Throwable $e) {
-        $jalaliYear = $toPersianDigits(now()->format('Y'));
+        $year = now()->format('Y');
     }
 @endphp
 
-<footer class="relative mt-32 border-t border-white/5 bg-navy-2/40">
-    <div class="max-w-7xl mx-auto px-5 md:px-10 py-16">
-
-        {{-- بالا: برند + خبرنامه --}}
-        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 pb-12 border-b border-white/5">
-            <div class="space-y-3 max-w-md">
-                <div class="flex items-center gap-3">
-                    <img src="{{ $logo }}" alt="{{ $siteName }}" class="w-11 h-11">
-                    <span class="text-2xl font-black">{{ $siteName }}</span>
+<footer class="rxds-footer">
+    <div class="rxds-footer-inner">
+        <div class="rxds-footer-top">
+            <div class="rxds-footer-brand">
+                <div class="rxds-footer-logo">
+                    <img src="{{ $logo }}" alt="{{ $siteName }}">
+                    <span>{{ $siteName }}</span>
                 </div>
 
-                <p class="text-sm text-snow/50 leading-7">
-                    {{ $aboutText }}
+                <p class="rxds-footer-desc">
+                    {{ $tagline }}
                 </p>
+
+                @if (!empty($preparedSocials))
+                    <div class="rxds-footer-social">
+                        @foreach ($preparedSocials as $social)
+                            <a href="{{ $social['url'] }}" target="_blank" rel="noopener noreferrer" class="rxds-social-btn"
+                                title="{{ $social['label'] }}" aria-label="{{ $social['label'] }}">
+                                <i class="{{ $social['icon'] }}"></i>
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
             </div>
 
-            <div class="w-full max-w-md">
-                <p class="text-sm font-bold mb-3 text-snow/70">عضویت در خبرنامه رشد</p>
+            <div class="rxds-footer-cta">
+                <h3>آماده‌ای رشد دیجیتال را شروع کنی؟</h3>
+                <p>
+                    پروژه‌ات را مرحله‌به‌مرحله تعریف کن؛ ما بر اساس هدف، بودجه و زمان‌بندی، مسیر اجرا را پیشنهاد
+                    می‌دهیم.
+                </p>
 
-                <form class="flex gap-2" onsubmit="return false;">
-                    <input type="email" placeholder="ایمیل شما"
-                           class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm placeholder:text-snow/30 focus:outline-none focus:border-sky/50 transition-colors">
-                    <button type="submit" class="btn btn-primary !px-5">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                </form>
+                <div class="flex flex-wrap gap-3">
+                    @if (Route::has('request-project'))
+                        <a href="{{ route('request-project') }}" class="rxds-btn rxds-btn-primary rxds-btn-sm"
+                            wire:navigate>
+                            <i class="fa-solid fa-rocket"></i>
+                            <span>درخواست پروژه</span>
+                        </a>
+                    @endif
+
+                    @if (Route::has('contact'))
+                        <a href="{{ route('contact') }}" class="rxds-btn rxds-btn-ghost rxds-btn-sm" wire:navigate>
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>تماس</span>
+                        </a>
+                    @endif
+                </div>
             </div>
         </div>
 
-        {{-- لینک‌ها --}}
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-10 py-12">
-            <div class="space-y-4">
-                <p class="font-bold text-sm">{{ $siteName }}</p>
+        <div class="rxds-footer-grid">
+            <div class="rxds-footer-col">
+                <h4>دسترسی سریع</h4>
 
-                <ul class="space-y-3 text-sm text-snow/50">
-                    <li>
-                        <a href="{{ route('about') }}" wire:navigate class="hover:text-sky transition-colors">
-                            درباره ما
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="{{ route('contact') }}" wire:navigate class="hover:text-sky transition-colors">
-                            تماس با ما
-                        </a>
-                    </li>
-
-                    @if (Route::has('projects'))
+                <ul class="rxds-footer-links">
+                    @foreach ($quickLinks as $link)
                         <li>
-                            <a href="{{ route('projects') }}" wire:navigate class="hover:text-sky transition-colors">
-                                نمونه‌کارها
-                            </a>
-                        </li>
-                    @endif
-
-                    <li>
-                        <a href="{{ url('/#faq') }}" class="hover:text-sky transition-colors">
-                            سوالات متداول
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="space-y-4">
-                <p class="font-bold text-sm">خدمات</p>
-
-                <ul class="space-y-3 text-sm text-snow/50">
-                    @foreach ($footerServices as $slug => $title)
-                        <li>
-                            <a href="{{ route('contact', ['service' => $slug]) }}" class="hover:text-sky transition-colors">
-                                {{ $title }}
+                            <a href="{{ $link['url'] }}" wire:navigate>
+                                <i class="{{ $link['icon'] }}"></i>
+                                <span>{{ $link['label'] }}</span>
                             </a>
                         </li>
                     @endforeach
                 </ul>
             </div>
 
-            <div class="space-y-4">
-                <p class="font-bold text-sm">تماس</p>
+            <div class="rxds-footer-col">
+                <h4>خدمات</h4>
 
-                <ul class="space-y-3 text-sm text-snow/50">
-                    @if ($contactAddress)
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-location-dot text-sky/70"></i>
-                            {{ $contactAddress }}
+                <ul class="rxds-footer-links">
+                    @forelse ($footerServices as $slug => $title)
+                        <li>
+                            @if (Route::has('services.show'))
+                                <a href="{{ route('services.show', $slug) }}" wire:navigate>
+                                    <i class="fa-solid fa-arrow-left"></i>
+                                    <span>{{ $title }}</span>
+                                </a>
+                            @elseif (Route::has('contact'))
+                                <a href="{{ route('contact', ['service' => $slug]) }}" wire:navigate>
+                                    <i class="fa-solid fa-arrow-left"></i>
+                                    <span>{{ $title }}</span>
+                                </a>
+                            @endif
                         </li>
+                    @empty
+                        <li>
+                            <a href="{{ Route::has('services') ? route('services') : '#' }}" wire:navigate>
+                                <i class="fa-solid fa-layer-group"></i>
+                                <span>همه خدمات</span>
+                            </a>
+                        </li>
+                    @endforelse
+                </ul>
+            </div>
+
+            <div class="rxds-footer-col">
+                <h4>صفحات قانونی</h4>
+
+                <ul class="rxds-footer-links">
+                    @forelse ($legalPages as $slug => $title)
+                        @if (Route::has('page'))
+                            <li>
+                                <a href="{{ route('page', $slug) }}" wire:navigate>
+                                    <i class="fa-solid fa-file-lines"></i>
+                                    <span>{{ $title }}</span>
+                                </a>
+                            </li>
+                        @endif
+                    @empty
+                        <li>
+                            <span class="rxds-footer-links text-xs">
+                                صفحات قانونی از پنل مدیریت قابل اضافه‌کردن است.
+                            </span>
+                        </li>
+                    @endforelse
+                </ul>
+            </div>
+
+            <div class="rxds-footer-col">
+                <h4>تماس با ما</h4>
+
+                <div class="rxds-footer-contact">
+                    @if ($contactAddress)
+                        <div class="rxds-footer-contact-item">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span>{{ $contactAddress }}</span>
+                        </div>
                     @endif
 
                     @if ($contactEmail)
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-envelope text-sky/70"></i>
+                        <div class="rxds-footer-contact-item">
+                            <i class="fa-solid fa-envelope"></i>
                             <a href="mailto:{{ $contactEmail }}" class="hover:text-sky transition-colors" dir="ltr">
                                 {{ $contactEmail }}
                             </a>
-                        </li>
+                        </div>
                     @endif
 
                     @if ($contactPhone)
-                        <li class="flex items-center gap-2">
-                            <i class="fa-solid fa-phone text-sky/70"></i>
+                        <div class="rxds-footer-contact-item">
+                            <i class="fa-solid fa-phone"></i>
                             <a href="tel:{{ $contactPhoneTel }}" class="hover:text-sky transition-colors">
                                 {{ $contactPhone }}
                             </a>
-                        </li>
+                        </div>
                     @endif
-                </ul>
-            </div>
-
-            <div class="space-y-4">
-                <p class="font-bold text-sm">همراه ما باشید</p>
-
-                <div class="flex gap-3">
-                    @foreach ($preparedSocials as $social)
-                        <a
-                            href="{{ $social['url'] }}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="{{ $social['label'] }}"
-                            class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-snow/60 hover:text-sky hover:border-sky/40 transition-all"
-                        >
-                            <i class="{{ $social['icon'] }}"></i>
-                        </a>
-                    @endforeach
                 </div>
             </div>
         </div>
 
-        {{-- پایین --}}
-        <div class="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-white/5 text-xs text-snow/35">
+        <div class="rxds-footer-bottom">
             <p>
-                © {{ $jalaliYear }} {{ $siteName }} — تمامی حقوق محفوظ است.
+                © {{ $year }} {{ $siteName }} — تمامی حقوق محفوظ است.
             </p>
 
-            <p class="flex items-center gap-1.5">
-                ساخته‌شده با <i class="fa-solid fa-heart text-primary"></i> در نجف‌آباد
+            <p class="flex items-center gap-2">
+                <i class="fa-solid fa-heart text-rose-400"></i>
+                ساخته‌شده برای رشد کسب‌وکارهای جدی
             </p>
         </div>
     </div>
