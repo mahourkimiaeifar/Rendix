@@ -10,6 +10,7 @@
 @endphp
 <!doctype html>
 <html lang="fa" dir="rtl" class="dark" data-theme="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -51,7 +52,7 @@
                 try {
                     var stored = localStorage.getItem(key);
                     if (stored === 'light' || stored === 'dark') { theme = stored; }
-                } catch (e) {}
+                } catch (e) { }
 
                 if (!theme) {
                     var cookie = document.cookie.split('; ').find(function (row) {
@@ -80,6 +81,7 @@
 
     @stack('rendix.head')
 </head>
+
 <body>
     <div id="rx-background" aria-hidden="true"></div>
     <div id="background" aria-hidden="true"></div>
@@ -117,7 +119,7 @@
 
                         localStorage.setItem('rendix-theme', next);
                         document.cookie = 'rendix-theme=' + next + '; path=/; max-age=31536000; SameSite=Lax';
-                    } catch (e) {}
+                    } catch (e) { }
                 };
             }
 
@@ -163,5 +165,8 @@
     @include('components.rx-toast-js')
 
     @stack('rendix.scripts')
+
+    @include('components.site.copy-guard')
 </body>
+
 </html>

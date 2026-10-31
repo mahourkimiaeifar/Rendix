@@ -21,6 +21,12 @@
             ],
         ],
         [
+            'title' => 'فروشگاه',
+            'items' => [
+                ['route' => 'admin.templates.index', 'match' => 'admin.templates.*', 'label' => 'قالب‌ها', 'icon' => 'fa-solid fa-store'],
+            ],
+        ],
+        [
             'title' => 'سایت',
             'items' => [
                 ['route' => 'admin.services.index', 'match' => 'admin.services.*', 'label' => 'خدمات', 'icon' => 'fa-solid fa-layer-group'],
@@ -64,10 +70,8 @@
 
                 @foreach ($group['items'] as $item)
                     @if (Route::has($item['route']))
-                        <a
-                            href="{{ route($item['route']) }}"
-                            class="admin-nav-item {{ request()->routeIs($item['match']) ? 'active' : '' }}"
-                        >
+                        <a href="{{ route($item['route']) }}"
+                            class="admin-nav-item {{ request()->routeIs($item['match']) ? 'active' : '' }}">
                             <i class="{{ $item['icon'] }}"></i>
                             <span>{{ $item['label'] }}</span>
                         </a>
@@ -92,4 +96,5 @@
             </div>
         </div>
     </div>
+    @include('components.rx-shell')
 </aside>

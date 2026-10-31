@@ -270,6 +270,7 @@
             </p>
         </div>
     </div>
+    @include('components.rx-shell')
 </footer>
 
 @once

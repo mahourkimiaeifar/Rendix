@@ -36,6 +36,23 @@ Volt::route('/login', 'auth.login-page')->name('login');
 Volt::route('/forgot-password', 'auth.forgot-password-page')->name('password.request');
 Volt::route('/reset-password/{token}', 'auth.reset-password-page')->name('password.reset');
 
+
+/* ---------------------------------------------------------
+| فروشگاه قالب — عمومی
+--------------------------------------------------------- */
+Volt::route('/templates', 'templates.templates-page')->name('templates.index');
+Volt::route('/templates/{slug}', 'templates.template-show-page')->name('templates.show');
+
+Route::get('/templates/{template}/preview', [\App\Http\Controllers\TemplateDemoController::class, 'preview'])->name('templates.preview');
+Route::get('/templates/{template}/assets/{path}', [\App\Http\Controllers\TemplateDemoController::class, 'asset'])
+    ->where('path', '.*')
+    ->name('templates.asset');
+
+/* ---------------------------------------------------------
+   Templates Shop — Admin (داخل گروه prefix ادمین و middleware admin.auth)
+--------------------------------------------------------- */
+
+
 Route::post('/newsletter/subscribe', function (\Illuminate\Http\Request $request) {
     $data = $request->validate([
         'email' => ['required', 'email', 'max:190'],
@@ -305,6 +322,9 @@ Route::prefix(config('admin.prefix', 'admin'))
 
                 return Storage::disk('public')->download($attachment->path, $attachment->original_name);
             })->name('project-requests.attachments.download');
+
+            Volt::route('/templates', 'admin.templates.index-page')->name('templates.index');
+            Volt::route('/templates/form', 'admin.templates.form-page')->name('templates.form');
 
             Volt::route('/posts', 'admin.posts.index-page')->name('posts.index');
             Volt::route('/posts/form', 'admin.posts.form-page')->name('posts.form');

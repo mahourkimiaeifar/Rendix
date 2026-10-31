@@ -8,6 +8,7 @@
         ['route' => 'services', 'label' => 'خدمات'],
         ['route' => 'projects', 'label' => 'نمونه‌کارها'],
         ['route' => 'blog', 'label' => 'بلاگ'],
+        ['route' => 'templates.index', 'label' => 'فروشگاه قالب'],
         ['route' => 'request-project', 'label' => 'درخواست پروژه'],
         ['route' => 'contact', 'label' => 'تماس با ما'],
     ];
