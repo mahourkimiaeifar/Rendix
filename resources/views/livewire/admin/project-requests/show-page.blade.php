@@ -127,6 +127,27 @@ new #[Layout('components.layouts.admin')]
             'message' => 'یادداشت داخلی ثبت شد.',
         ]);
     }
+
+    public function saveNow(): void
+    {
+        $request = \App\Models\ProjectRequest::query()->find($this->requestId);
+
+        if (!$request) {
+            $this->dispatch('rx-toast', ['type' => 'error', 'message' => 'درخواست پیدا نشد.']);
+
+            return;
+        }
+
+        $request->status = $this->status;
+
+        if (in_array($this->status, ['reviewing', 'meeting_scheduled', 'proposal_sent', 'in_progress', 'delivered'], true) && !$request->responded_at) {
+            $request->responded_at = now();
+        }
+
+        $request->save();
+
+        $this->dispatch('rx-toast', ['type' => 'success', 'message' => 'وضعیت با موفقیت ذخیره شد.']);
+    }
 };
 
 ?>
@@ -429,6 +450,14 @@ new #[Layout('components.layouts.admin')]
                         <x-admin.choice-pills name="status" label="" :options="\App\Models\ProjectRequest::statusOptions()"
                             :value="$status" />
                     </div>
+                    <div style="padding: 0 14px 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <button type="button" class="admin-btn admin-btn-primary" wire:click="saveNow">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            ذخیره وضعیت
+                        </button>
+                        <span class="admin-help">انتخاب هر پیل وضعیت هم همان لحظه ذخیره می‌شود؛ این دکمه تأیید نهایی
+                            است.</span>
+                    </div>  
                 </div>
 
                 <div class="admin-panel">

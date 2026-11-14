@@ -3356,3 +3356,14 @@ select.admin-input option:checked {
         transform: none !important;
     }
 }
+
+/* =========================================================
+   SMOOTH ADMIN BUTTONS — no shine strip
+========================================================= */
+.admin-btn::after {
+    display: none !important;
+}
+
+.admin-btn {
+    overflow: visible;
+}
